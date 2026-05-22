@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd"
+  logicalFilePath="db/changelog/scheme/changelog-010.xml">
+
+  <changeSet id="changeset-010-1" author="andzrej.mielnik">
+    <sql dbms="h2"
+      endDelimiter=";"
+      splitStatements="true"
+      stripComments="true">
+      INSERT INTO user_config (id, user_name, user_config_payload)
+      select NEXTVAL('global_sequence'), 'DEFAULT', '{"defaultCronExpression": "0 */15 * ? * *"}';
+    </sql>
+  </changeSet>
+
+  <changeSet id="changeset-010-2" author="andzrej.mielnik">
+    <sql dbms="h2"
+      endDelimiter=";"
+      splitStatements="true"
+      stripComments="true">
+      INSERT INTO app_config (id, app_config_payload)
+      select NEXTVAL('global_sequence'),
+             '{"defaultUserId": ' || (select id from user_config where user_name = 'DEFAULT') ||
+             ', "daysForSetRead": 3, "daysForCleanRssItems": 4}';
+    </sql>
+  </changeSet>
+</databaseChangeLog>
