@@ -501,7 +501,7 @@ function RssListPage() {
                     <Button size="sm" onClick={() => void refreshAll()} disabled={refreshingAll}>
                         {refreshingAll ? t("reader.refreshing") : t("reader.refresh")}
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => setShortcutsOpen(true)} aria-label="Keyboard shortcuts">
+                    <Button size="sm" variant="outline" onClick={() => setShortcutsOpen(true)} aria-label={t("reader.shortcuts")}>
                         ?
                     </Button>
                 </div>

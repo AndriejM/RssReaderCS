@@ -7,8 +7,10 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/shared/ui/kit/select.tsx";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
 export function UserSelector() {
+  const {t} = useI18n();
   const user = useUserStoreAsync((state) => state.getUser);
   const appConfig = useAppConfigStoreAsync((state) => state.appConfig);
   const setCurrentUser = useAppConfigStore((state) => state.setCurrentUser.trigger);
@@ -24,7 +26,7 @@ export function UserSelector() {
   return (
       <Select defaultValue={appConfig.appConfigPayload.defaultUserId.toString()} onValueChange={changeUser}>
         <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Profile"/>
+          <SelectValue placeholder={t("nav.profile")}/>
         </SelectTrigger>
         <SelectContent>
           {user.map((u) => {
