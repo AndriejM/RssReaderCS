@@ -35,7 +35,8 @@ export function UserSettings() {
   const saveSettings = useSettingsStore((state) => state.saveUserSettings.trigger);
   const {t} = useI18n();
 
-  const [draft, setDraft] = useState<UserSettingsPayload | null>(null);
+  const [draft, setDraft] = useState<UserSettingsPayload | null>(settings);
+  const [base, setBase] = useState<UserSettingsPayload | null>(settings);
   const [saving, setSaving] = useState(false);
 
   const defaultUserId = appConfig?.appConfigPayload?.defaultUserId;
@@ -46,9 +47,13 @@ export function UserSettings() {
     }
   }, [defaultUserId, updateUserId]);
 
+  if (settings !== base) {
+    setBase(settings);
+    setDraft(settings);
+  }
+
   useEffect(() => {
     if (settings) {
-      setDraft(settings);
       setLanguage(settings.language as Language);
     }
   }, [settings]);
