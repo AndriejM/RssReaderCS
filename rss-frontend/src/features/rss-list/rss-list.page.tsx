@@ -181,10 +181,10 @@ function RssListPage() {
                 await setStatusRssRead(item.id);
                 invalidate();
             } catch {
-                toast.error("Could not mark item as read.");
+                toast.error(t("reader.markReadError"));
             }
         }
-    }, [appConfig, invalidate]);
+    }, [appConfig, invalidate, t]);
 
     const move = useCallback((delta: number) => {
         if (filtered.length === 0) {
@@ -208,9 +208,9 @@ function RssListPage() {
             await markRssRead(item.id);
             invalidate();
         } catch {
-            toast.error("Could not mark item as read.");
+            toast.error(t("reader.markReadError"));
         }
-    }, [invalidate]);
+    }, [invalidate, t]);
 
     const markUnread = useCallback(async (item: RssItem) => {
         if (item.id === null) {
@@ -220,9 +220,9 @@ function RssListPage() {
             await markRssUnread(item.id);
             invalidate();
         } catch {
-            toast.error("Could not mark item as unread.");
+            toast.error(t("reader.markUnreadError"));
         }
-    }, [invalidate]);
+    }, [invalidate, t]);
 
     const deleteItem = useCallback(async (item: RssItem) => {
         const itemId = item.id;
@@ -236,9 +236,9 @@ function RssListPage() {
                 setRssId(null);
             }
             invalidate();
-            toast("Item deleted", {
+            toast(t("reader.deleted"), {
                 action: {
-                    label: "Undo",
+                    label: t("reader.undo"),
                     onClick: async () => {
                         try {
                             await restoreRssItem(itemId);
@@ -246,15 +246,15 @@ function RssListPage() {
                             invalidate();
                             setRssId(itemId);
                         } catch {
-                            toast.error("Could not restore item.");
+                            toast.error(t("reader.restoreError"));
                         }
                     },
                 },
             });
         } catch {
-            toast.error("Could not delete item.");
+            toast.error(t("reader.deleteError"));
         }
-    }, [invalidate, rssId]);
+    }, [invalidate, rssId, t]);
 
     const undoDelete = useCallback(async () => {
         const itemId = lastDeleted.current;
@@ -267,9 +267,9 @@ function RssListPage() {
             invalidate();
             setRssId(itemId);
         } catch {
-            toast.error("Could not restore item.");
+            toast.error(t("reader.restoreError"));
         }
-    }, [invalidate]);
+    }, [invalidate, t]);
 
     const loadFullText = useCallback(async (item: RssItem) => {
         if (item.id === null) {
@@ -285,11 +285,11 @@ function RssListPage() {
             }
         } catch {
             setFullText(null);
-            setFullTextError("Could not load full text.");
+            setFullTextError(t("reader.fullTextError"));
         } finally {
             setFullTextLoading(false);
         }
-    }, []);
+    }, [t]);
 
     const openOriginal = useCallback((item: RssItem) => {
         if (item.link) {
@@ -302,22 +302,22 @@ function RssListPage() {
         try {
             const result = await refreshAllFeeds(() => ({userId}))();
             if (!result) {
-                toast.warning("No user selected.");
+                toast.warning(t("common.noUser"));
                 return;
             }
             const added = result.results.reduce((sum, feed) => sum + feed.added, 0);
             if (result.failed > 0) {
-                toast.warning(`Refreshed feeds: ${added} new, ${result.failed} failed.`);
+                toast.warning(t("reader.refreshSummaryFailed", {added, failed: result.failed}));
             } else {
-                toast.success(`Refreshed feeds: ${added} new.`);
+                toast.success(t("reader.refreshSummary", {added}));
             }
             invalidate();
         } catch {
-            toast.error("Could not refresh feeds.");
+            toast.error(t("reader.refreshError"));
         } finally {
             setRefreshingAll(false);
         }
-    }, [invalidate, userId]);
+    }, [invalidate, userId, t]);
 
     const changeLayout = useCallback((next: Layout) => {
         if (!settings) {

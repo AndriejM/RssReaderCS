@@ -5,20 +5,22 @@ import {UserConfig} from "@/features/header/user-config.tsx";
 import {Button} from "@/shared/ui/kit/button.tsx";
 import {Rss, SettingsIcon} from "lucide-react";
 import {Link} from "react-router-dom";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
 export function AppHeader() {
+  const {t} = useI18n();
 
   return (
       <>
         <div className="grid grid-cols-8 gap-4">
           <div className="flex p-2 justify-start gap-3">
             <Link to="/">
-              <Button variant="outline" size="icon" aria-label="Submit">
+              <Button variant="outline" size="icon" aria-label={t("nav.reader")}>
                 <Rss />
               </Button>
             </Link>
             <Link to="/settings">
-              <Button variant="outline" size="icon" aria-label="Submit">
+              <Button variant="outline" size="icon" aria-label={t("settings.title")}>
                 <SettingsIcon />
               </Button>
             </Link>
