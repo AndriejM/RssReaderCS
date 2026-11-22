@@ -38,6 +38,42 @@ public class RssService {
         .orElse(null);
   }
 
+  @Transactional
+  public RssItemDto setRssStatusToUnread(Long id) {
+    return rssItemRepository.findById(id)
+        .map(rssItem -> rssItem.toBuilder().status(RssItemStatus.NEW).build())
+        .map(this::save)
+        .map(item -> {
+          readMarkerService.remove(item.getUserId(), item.getSourceId(), item.getLink());
+          return toDto(item);
+        })
+        .orElse(null);
+  }
+
+  @Transactional
+  public RssItemDto deleteRssItem(Long id) {
+    return rssItemRepository.findById(id)
+        .map(rssItem -> rssItem.toBuilder().status(RssItemStatus.READ).build())
+        .map(this::save)
+        .map(item -> {
+          readMarkerService.markRead(item);
+          return toDto(item);
+        })
+        .orElse(null);
+  }
+
+  @Transactional
+  public RssItemDto restoreRssItem(Long id) {
+    return rssItemRepository.findById(id)
+        .map(rssItem -> rssItem.toBuilder().status(RssItemStatus.NEW).build())
+        .map(this::save)
+        .map(item -> {
+          readMarkerService.remove(item.getUserId(), item.getSourceId(), item.getLink());
+          return toDto(item);
+        })
+        .orElse(null);
+  }
+
   public List<RssItemDto> getRssItemsForUserAndGroup(Long userId, String groupUuid) {
     return rssItemRepository.getByUserIdAndGroupUuidAndStatus(userId, groupUuid, RssItemStatus.NEW)
         .stream()
@@ -72,6 +108,7 @@ public class RssService {
         .sourceIdType(item.getSourceIdType())
         .feedName(item.getFeedName())
         .fetchedAt(item.getFetchedAt())
+        .description(item.getItemPayload() == null ? null : item.getItemPayload().getDescription())
         .itemPayload(item.getItemPayload())
         .build();
   }

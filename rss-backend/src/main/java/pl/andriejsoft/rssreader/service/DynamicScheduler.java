@@ -1,6 +1,7 @@
 package pl.andriejsoft.rssreader.service;
 
 import jakarta.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,12 @@ public class DynamicScheduler {
   @Autowired
   private ReadMarkerService readMarkerService;
 
+  @Autowired
+  private FeedLockService feedLockService;
+
+  @Autowired
+  private FeedHealthService feedHealthService;
+
   private final Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
   @Autowired
   private View error;
@@ -49,9 +56,10 @@ public class DynamicScheduler {
     startSchedulersForCurrentUser();
   }
 
-  @Scheduled(fixedDelay = 60 * 60 * 1000, initialDelay = 5 * 60 * 1000)
+  @Scheduled(fixedDelay = 15 * 60 * 1000, initialDelay = 5 * 60 * 1000)
   public void startCleaning() {
     log.info("Starting cleaning ...");
+    feedLockService.cleanup();
     AppConfigEntity appConfig = appConfigService.getAppConfig();
     UserConfigDto currentUserConfig = userConfigService.getCurrentUserConfig();
 
@@ -108,11 +116,17 @@ public class DynamicScheduler {
 
       cancelIfExists(id);
 
+      Runnable job = () -> runJob(task);
       if (isValid(cron)) {
-        Runnable job = () -> runJob(task);
         CronTrigger trigger = new CronTrigger(cron);
         ScheduledFuture<?> future = scheduler.schedule(job, trigger);
         scheduledTasks.put(id, future);
+        updateNextRunAt(task, nextCronRun(cron));
+      } else if (task.getRss().getRefreshMinutes() != null && task.getRss().getRefreshMinutes() > 0) {
+        Duration interval = Duration.ofMinutes(task.getRss().getRefreshMinutes());
+        ScheduledFuture<?> future = scheduler.scheduleWithFixedDelay(job, interval);
+        scheduledTasks.put(id, future);
+        updateNextRunAt(task, LocalDateTime.now().plus(interval));
       }
     }
 
@@ -136,8 +150,34 @@ public class DynamicScheduler {
   }
 
   private void runJob(JobParams task) {
-    LogHelper.info("Loading RSS Items for {}", task);
-    rssLoaderService.loadRss(task);
+    String id = task.getRss().getUuid();
+    if (feedHealthService.shouldWait(task.getUserId(), id)) {
+      log.debug("Skipping feed {} until next retry", id);
+      return;
+    }
+    if (!feedLockService.tryLock(id)) {
+      log.debug("Skipping busy feed {}", id);
+      return;
+    }
+    try {
+      LogHelper.info("Loading RSS Items for {}", task);
+      rssLoaderService.loadRss(task);
+    } finally {
+      feedLockService.unlock(id);
+    }
+  }
+
+  private void updateNextRunAt(JobParams task, LocalDateTime nextRunAt) {
+    userConfigService.updateRssConfig(task.getUserId(), task.getRss().getUuid(),
+        rss -> rss.setNextRunAt(nextRunAt));
+  }
+
+  private LocalDateTime nextCronRun(String cron) {
+    try {
+      return CronExpression.parse(cron).next(LocalDateTime.now());
+    } catch (Exception e) {
+      return null;
+    }
   }
 
   private boolean isValid(String expression) {

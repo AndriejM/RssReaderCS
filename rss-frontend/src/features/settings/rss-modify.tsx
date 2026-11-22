@@ -23,9 +23,26 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 import useRssModifyStore from "@/shared/storage/rss-modify-store.ts";
 import {useEffect} from "react";
+import type {RssConfig} from "@/shared/model/types.ts";
 
 function getRegexCheckExpression() {
   return /^((((\d+,)+\d+|(\d+(\/|-|#)\d+)|\d+L?|\*(\/\d+)?|L(-\d+)?|\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})$/
+}
+
+const optionalPositiveInt = z.union([
+  z.literal(""),
+  z.string().regex(/^\d+$/).refine((value) => Number(value) > 0, {
+    message: "Must be greater than 0.",
+  }),
+]).optional();
+
+function toOptionalInt(value?: string) {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  const parsed = Number(trimmed);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
 const formSchema = z.object({
@@ -37,7 +54,9 @@ const formSchema = z.object({
   }),
   refreshCronExpression: z.string().regex(getRegexCheckExpression(), {
     message: "Cron expression isn't valid.",
-  }).optional().or(z.literal(''))
+  }).optional().or(z.literal('')),
+  refreshMinutes: optionalPositiveInt,
+  cleanMinutes: optionalPositiveInt,
 });
 
 export const RssModify = () => {
@@ -48,7 +67,9 @@ export const RssModify = () => {
     defaultValues: {
       name: rssConfig?.name || "",
       url: rssConfig?.url || "",
-      refreshCronExpression: rssConfig?.refreshCronExpression || ""
+      refreshCronExpression: rssConfig?.refreshCronExpression || "",
+      refreshMinutes: rssConfig?.refreshMinutes?.toString() ?? "",
+      cleanMinutes: rssConfig?.cleanMinutes?.toString() ?? "",
     },
   });
 
@@ -60,7 +81,16 @@ export const RssModify = () => {
     } else {
       uuid = uuidv4();
     }
-    onAction({uuid, name: values.name, url: values.url, refreshCronExpression: values.refreshCronExpression ?? "" });
+    const updated: RssConfig = {
+      ...(rssConfig ?? {uuid}),
+      uuid,
+      name: values.name,
+      url: values.url,
+      refreshCronExpression: values.refreshCronExpression ?? "",
+      refreshMinutes: toOptionalInt(values.refreshMinutes),
+      cleanMinutes: toOptionalInt(values.cleanMinutes),
+    };
+    onAction(updated);
     form.reset();
     closeRssModify();
   }
@@ -70,6 +100,8 @@ export const RssModify = () => {
       name: rssConfig?.name ?? "",
       url: rssConfig?.url ?? "",
       refreshCronExpression: rssConfig?.refreshCronExpression ?? "",
+      refreshMinutes: rssConfig?.refreshMinutes?.toString() ?? "",
+      cleanMinutes: rssConfig?.cleanMinutes?.toString() ?? "",
     });
   }, [rssConfig, form]);
 
@@ -133,6 +165,61 @@ export const RssModify = () => {
                       </FormItem>
                   )}
               />
+
+              <FormField
+                  control={form.control}
+                  name="refreshMinutes"
+                  render={({field}) => (
+                      <FormItem>
+                        <FormLabel>Refresh minutes</FormLabel>
+                        <FormControl>
+                          <Input
+                              type="number"
+                              min={1}
+                              step={1}
+                              placeholder="Refresh every N minutes"
+                              value={field.value ?? ""}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Optional interval-based refresh override.
+                        </FormDescription>
+                        <FormMessage/>
+                      </FormItem>
+                  )}
+              />
+
+              <FormField
+                  control={form.control}
+                  name="cleanMinutes"
+                  render={({field}) => (
+                      <FormItem>
+                        <FormLabel>Clean minutes</FormLabel>
+                        <FormControl>
+                          <Input
+                              type="number"
+                              min={1}
+                              step={1}
+                              placeholder="Clean after N minutes"
+                              value={field.value ?? ""}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                              name={field.name}
+                              ref={field.ref}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Optional per-feed cleanup override.
+                        </FormDescription>
+                        <FormMessage/>
+                      </FormItem>
+                  )}
+              />
+
               <DialogFooter>
                 <DialogClose asChild>
                   <Button type="button" variant="outline">{cancelLabel}</Button>
@@ -143,5 +230,5 @@ export const RssModify = () => {
           </Form>
         </DialogContent>
       </Dialog>
-  )
+  );
 }

@@ -1,7 +1,13 @@
 import axios, {type AxiosError, type AxiosResponse} from 'axios';
 import type {
   AppConfig,
+  FeedExport,
+  FeedImportResult,
+  RssConfigDto,
+  RssFullText,
   RssItem,
+  RssRefreshAllResult,
+  RssRefreshResult,
   RssUnreadCount,
   User,
   UserConfig,
@@ -91,4 +97,52 @@ export const getRssById = (itemId: number) => {
 }
 export const setStatusRssRead = async (itemId: number) => {
   await apiRequest<RssItem, number>(`/rss/rss/${itemId}/set-status-read`, "PUT");
+}
+
+export const markRssRead = (itemId: number) => {
+  return apiRequest<RssItem, number>(`/rss/rss/${itemId}/mark-read`, "POST");
+}
+
+export const markRssUnread = (itemId: number) => {
+  return apiRequest<RssItem, number>(`/rss/rss/${itemId}/mark-unread`, "POST");
+}
+
+export const deleteRssItem = (itemId: number) => {
+  return apiRequest<RssItem, number>(`/rss/rss/${itemId}`, "DELETE");
+}
+
+export const restoreRssItem = (itemId: number) => {
+  return apiRequest<RssItem, number>(`/rss/rss/${itemId}/restore`, "POST");
+}
+
+export const getRssFullText = (itemId: number) => {
+  return apiRequest<RssFullText, number>(`/rss/rss/${itemId}/full-text`, "POST");
+}
+
+export const refreshFeed = (get: UserIdGetter) => async (rssUuid: string) => {
+  const userId = get().userId;
+  if (!userId) {return null}
+  return await apiRequest<RssRefreshResult, void>(`/rss/refresh/${userId}/${rssUuid}`, "POST");
+}
+
+export const refreshAllFeeds = (get: UserIdGetter) => async () => {
+  const userId = get().userId;
+  if (!userId) {return null}
+  return await apiRequest<RssRefreshAllResult, void>(`/rss/refresh-all/${userId}`, "POST");
+}
+
+export const listFeeds = (userId: number) => {
+  return apiRequest<RssConfigDto[]>(`/feeds/${userId}`, "GET");
+}
+
+export const exportFeeds = (userId: number) => {
+  return apiRequest<FeedExport>(`/feeds/export/${userId}`, "GET");
+}
+
+export const importFeeds = (userId: number, feedExport: FeedExport) => {
+  return apiRequest<FeedImportResult, FeedExport>(`/feeds/import/${userId}`, "POST", feedExport);
+}
+
+export const forgetReadMarkers = (userId: number) => {
+  return apiRequest<string, void>(`/read-markers/${userId}`, "DELETE");
 }

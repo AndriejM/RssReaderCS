@@ -27,6 +27,17 @@ public class UserSettingsPayload {
   private Boolean firstFeedDone = false;
 
   @Builder.Default
+  private Boolean sound = false;
+
+  private String soundFile;
+
+  @Builder.Default
+  private Integer soundVolume = 50;
+
+  @Builder.Default
+  private Boolean showMessage = true;
+
+  @Builder.Default
   private FontScales fontScales = new FontScales();
 
   @Builder.Default

@@ -22,8 +22,8 @@ public class WebConfig implements WebMvcConfigurer {
     http
         .csrf(AbstractHttpConfigurer::disable)
         .httpBasic(AbstractHttpConfigurer::disable)
-        .cors(c-> c.configurationSource(corsConfigurationSource()))
-    ;
+        .cors(c -> c.configurationSource(corsConfigurationSource()))
+        .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
     return http.build();
   }
 

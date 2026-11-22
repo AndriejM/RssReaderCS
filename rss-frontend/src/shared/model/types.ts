@@ -36,6 +36,10 @@ export interface UserSettingsPayload {
   fontScales: FontScales
   columnWidths: ColumnWidths
   rowHeights: RowHeights
+  sound?: boolean
+  soundFile?: string
+  soundVolume?: number
+  showMessage?: boolean
 }
 
 export interface FontScales {
@@ -64,6 +68,8 @@ export interface RssConfig {
   name: string
   url: string
   refreshCronExpression: string
+  refreshMinutes?: number
+  cleanMinutes?: number
   icon?: string
   lastCheckedAt?: string
   lastOkAt?: string
@@ -88,6 +94,7 @@ export interface RssItem {
   link: string
   title: string
   pubDate: string
+  description?: string
   sourceId?: string
   sourceIdType?: 'LINK' | 'GUID' | 'ATOM_ID' | 'JSON_ID'
   feedName?: string
@@ -104,4 +111,59 @@ export interface RssItemPayload {
   link: string
   pubDate: string
   description: string
+}
+
+export interface RssConfigDto extends RssConfig {
+  groupUuid: string
+}
+
+export interface RssRefreshResult {
+  ok: boolean
+  rssUuid: string
+  name?: string
+  added: number
+  skipped: number
+  seen: number
+  notModified: boolean
+  busy: boolean
+  error?: string
+}
+
+export interface RssRefreshAllResult {
+  ok: boolean
+  failed: number
+  results: RssRefreshResult[]
+}
+
+export interface RssFullText {
+  id: number
+  link: string
+  title: string
+  text: string
+  paragraphs: number
+  truncated: boolean
+  error?: string
+}
+
+export interface FeedExportItem {
+  groupUuid?: string
+  name: string
+  url: string
+  refreshCronExpression?: string
+  refreshMinutes?: number
+  cleanMinutes?: number
+  icon?: string
+}
+
+export interface FeedExport {
+  version: number
+  feeds: FeedExportItem[]
+}
+
+export interface FeedImportResult {
+  ok: boolean
+  added: number
+  skipped: number
+  total: number
+  error?: string
 }

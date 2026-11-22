@@ -55,6 +55,27 @@ public class ReadMarkerService {
   }
 
   @Transactional
+  public void remove(Long userId, String sourceId, String link) {
+    if (userId == null) {
+      return;
+    }
+    if (StringUtils.hasText(sourceId)) {
+      readMarkerRepository.deleteByUserIdAndSourceId(userId, sourceId);
+    }
+    if (StringUtils.hasText(link)) {
+      readMarkerRepository.deleteByUserIdAndLink(userId, link);
+    }
+  }
+
+  @Transactional
+  public void forget(Long userId) {
+    if (userId == null) {
+      return;
+    }
+    readMarkerRepository.deleteByUserId(userId);
+  }
+
+  @Transactional
   public void purgeExpired(Long userId, int ttlDays) {
     if (userId == null || ttlDays <= 0) {
       return;

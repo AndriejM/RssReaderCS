@@ -18,6 +18,8 @@ public class RssConfig {
   private String name;
   private String url;
   private String refreshCronExpression;
+  private Integer refreshMinutes;
+  private Integer cleanMinutes;
   private String icon;
 
   private LocalDateTime lastCheckedAt;

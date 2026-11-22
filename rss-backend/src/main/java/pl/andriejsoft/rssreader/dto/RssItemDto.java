@@ -35,5 +35,7 @@ public class RssItemDto {
 
   LocalDateTime fetchedAt;
 
+  String description;
+
   RssItemPayload itemPayload;
 }

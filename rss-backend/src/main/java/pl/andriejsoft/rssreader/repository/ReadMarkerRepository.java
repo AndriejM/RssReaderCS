@@ -22,4 +22,19 @@ public interface ReadMarkerRepository extends CrudRepository<ReadMarker, Long> {
   @Transactional
   @Query("delete from ReadMarker m where m.userId = ?1 and m.markedAt < ?2")
   void deleteByUserIdAndMarkedAtBefore(Long userId, LocalDateTime cutoff);
+
+  @Modifying
+  @Transactional
+  @Query("delete from ReadMarker m where m.userId = ?1 and m.sourceId = ?2")
+  void deleteByUserIdAndSourceId(Long userId, String sourceId);
+
+  @Modifying
+  @Transactional
+  @Query("delete from ReadMarker m where m.userId = ?1 and m.link = ?2")
+  void deleteByUserIdAndLink(Long userId, String link);
+
+  @Modifying
+  @Transactional
+  @Query("delete from ReadMarker m where m.userId = ?1")
+  void deleteByUserId(Long userId);
 }

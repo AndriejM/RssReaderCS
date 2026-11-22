@@ -1,6 +1,7 @@
 import {useAppConfigStoreAsync} from "@/shared/storage/app-config-store.ts";
 import {useEffect} from "react";
 import {userConfigStore, userConfigStoreAsync} from "@/shared/storage/user-config-store.ts";
+import {useRssListAllStore} from "@/shared/storage/rss-list-all-store.ts";
 import {GroupView} from "@/features/settings/group-view.tsx";
 import {
   Accordion,
@@ -33,7 +34,7 @@ export function UserConfigSettings() {
     }
   }, [defaultUserId, updateUserId]);
 
-  function saveUserConfigWithGroups(groups: Group[]) {
+  async function saveUserConfigWithGroups(groups: Group[]) {
     if (!userConfig) return;
     const updatedUserConfig: UserConfig = {
       ...userConfig,
@@ -42,13 +43,14 @@ export function UserConfigSettings() {
         groups,
       },
     };
-    saveUserConfig(updatedUserConfig);
+    await saveUserConfig(updatedUserConfig);
+    useRssListAllStore.getState().getRssList.markStale();
   }
 
   function addGroup(group: Group) {
     if (!userConfig) return;
     console.log("add group:" + group);
-    saveUserConfigWithGroups([...userConfig.userConfigPayload.groups, group]);
+    void saveUserConfigWithGroups([...userConfig.userConfigPayload.groups, group]);
   }
 
   function deleteGroup(uuid: string | undefined) {
@@ -57,14 +59,14 @@ export function UserConfigSettings() {
       toast.warning("You can't delete last group!", { position: "top-center" });
       return;
     }
-    saveUserConfigWithGroups(
+    void saveUserConfigWithGroups(
       userConfig.userConfigPayload.groups.filter((obj) => obj.uuid !== uuid)
     );
   }
 
   function modifyGroup(group: Group) {
     if (!userConfig) return;
-    saveUserConfigWithGroups(
+    void saveUserConfigWithGroups(
       userConfig.userConfigPayload.groups
         .filter((obj) => obj.uuid !== group.uuid)
         .concat(group)
