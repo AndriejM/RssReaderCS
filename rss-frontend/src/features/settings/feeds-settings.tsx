@@ -7,9 +7,11 @@ import {userConfigStore, userConfigStoreAsync} from "@/shared/storage/user-confi
 import {useRssListAllStore} from "@/shared/storage/rss-list-all-store.ts";
 import useConfirmationStore from "@/shared/storage/confirmation-store.ts";
 import {exportFeeds, forgetReadMarkers, importFeeds} from "@/shared/api/api.ts";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 import type {FeedExport} from "@/shared/model/types.ts";
 
 export function FeedsSettings() {
+    const {t} = useI18n();
     const appConfig = useAppConfigStoreAsync((state) => state.appConfig);
     const userConfig = userConfigStoreAsync((state) => state.getUserConfig);
     const {openConfirmation} = useConfirmationStore();
@@ -21,7 +23,7 @@ export function FeedsSettings() {
 
     async function exportHandler() {
         if (userId === null) {
-            toast.warning("No user selected.");
+            toast.warning(t("settings.feeds.noUser"));
             return;
         }
         setBusy(true);
@@ -34,9 +36,9 @@ export function FeedsSettings() {
             link.download = `rss-feeds-${userId}.json`;
             link.click();
             URL.revokeObjectURL(url);
-            toast.success("Feeds exported.");
+            toast.success(t("settings.feeds.exported"));
         } catch {
-            toast.error("Could not export feeds.");
+            toast.error(t("settings.feeds.exportError"));
         } finally {
             setBusy(false);
         }
@@ -44,7 +46,7 @@ export function FeedsSettings() {
 
     async function importHandler(file: File) {
         if (userId === null) {
-            toast.warning("No user selected.");
+            toast.warning(t("settings.feeds.noUser"));
             return;
         }
         setBusy(true);
@@ -55,14 +57,14 @@ export function FeedsSettings() {
             }
             const result = await importFeeds(userId, data);
             if (!result.ok) {
-                toast.error(result.error ?? "Import failed.");
+                toast.error(result.error ?? t("settings.feeds.importError"));
                 return;
             }
             userConfigStore.getState().getUserConfig.markStale();
             useRssListAllStore.getState().getRssList.markStale();
-            toast.success(`Imported ${result.added}, skipped ${result.skipped}.`);
+            toast.success(t("settings.feeds.imported", {added: result.added, skipped: result.skipped}));
         } catch {
-            toast.error("Could not import feeds.");
+            toast.error(t("settings.feeds.importError"));
         } finally {
             setBusy(false);
         }
@@ -70,21 +72,21 @@ export function FeedsSettings() {
 
     function forgetHandler() {
         if (userId === null) {
-            toast.warning("No user selected.");
+            toast.warning(t("settings.feeds.noUser"));
             return;
         }
         openConfirmation({
-            title: "Forget read markers?",
-            description: "Previously read articles may appear again in the reader list.",
-            cancelLabel: "Cancel",
-            actionLabel: "Forget",
+            title: t("settings.feeds.forgetTitle"),
+            description: t("settings.feeds.forgetDesc"),
+            cancelLabel: t("common.cancel"),
+            actionLabel: t("settings.feeds.forgetAction"),
             onAction: async () => {
                 try {
                     await forgetReadMarkers(userId);
                     useRssListAllStore.getState().getRssList.markStale();
-                    toast.success("Read markers forgotten.");
+                    toast.success(t("settings.feeds.forgotten"));
                 } catch {
-                    toast.error("Could not forget read markers.");
+                    toast.error(t("settings.feeds.forgetError"));
                 }
             },
             onCancel: () => {
@@ -96,17 +98,17 @@ export function FeedsSettings() {
         <div className="flex justify-center pt-5">
             <Card className="w-3/4">
                 <CardHeader>
-                    <CardTitle>Feeds</CardTitle>
+                    <CardTitle>{t("settings.feeds.title")}</CardTitle>
                     <CardAction>
                         <div className="flex gap-2">
                             <Button variant="outline" onClick={() => void exportHandler()} disabled={busy || userId === null}>
-                                Export
+                                {t("settings.feeds.export")}
                             </Button>
                             <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={busy || userId === null}>
-                                Import
+                                {t("settings.feeds.import")}
                             </Button>
                             <Button variant="destructive" onClick={forgetHandler} disabled={busy || userId === null}>
-                                Forget read
+                                {t("settings.feeds.forgetRead")}
                             </Button>
                         </div>
                     </CardAction>
@@ -126,7 +128,7 @@ export function FeedsSettings() {
                         }}
                     />
                     <p className="text-sm text-muted-foreground">
-                        Feeds configured: {feedCount}. Export saves all groups and feed settings as JSON.
+                        {t("settings.feeds.count", {count: feedCount})}
                     </p>
                 </CardContent>
             </Card>
