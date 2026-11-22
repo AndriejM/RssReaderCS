@@ -1,7 +1,6 @@
 import {ModeToggle} from "@/shared/ui/components/theme/mode-toggle.tsx";
 import {UserSelector} from "@/features/header/user-selector.tsx";
 import {UserCreator} from "@/features/header/user-creator.tsx";
-import {UserConfig} from "@/features/header/user-config.tsx";
 import {Button} from "@/shared/ui/kit/button.tsx";
 import {Rss, SettingsIcon} from "lucide-react";
 import {Link} from "react-router-dom";
@@ -25,7 +24,6 @@ export function AppHeader() {
               </Button>
             </Link>
           </div>
-          <div className="col-span-5"><UserConfig/></div>
           <div className="col-span-2">
             <div className="flex p-2 justify-end gap-3">
               <div><UserSelector/></div>
