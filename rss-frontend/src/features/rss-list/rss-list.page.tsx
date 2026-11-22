@@ -15,6 +15,7 @@ import {
 } from "@/shared/ui/kit/dialog.tsx";
 import {RssContent} from "@/features/rss-list/rss-content.tsx";
 import {cn} from "@/shared/lib/css";
+import {useDragWidth} from "@/shared/lib/use-column-resize.ts";
 import {
     deleteRssItem,
     getRssFullText,
@@ -104,6 +105,34 @@ function RssListPage() {
         : "three";
     const fontScales = settings?.fontScales ?? {feeds: 100, headlines: 100, content: 100};
     const columnWidths = settings?.columnWidths ?? {feeds: 220, headlines: 420};
+
+    const [widths, setWidths] = useState<{ feeds: number; headlines: number } | null>(null);
+    if (widths === null && settings) {
+        setWidths({feeds: settings.columnWidths.feeds, headlines: settings.columnWidths.headlines});
+    }
+    const effectiveWidths = widths ?? columnWidths;
+    const widthsRef = useRef(effectiveWidths);
+    useEffect(() => {
+        widthsRef.current = effectiveWidths;
+    }, [effectiveWidths]);
+
+    const persistWidths = useCallback((patch: Partial<{ feeds: number; headlines: number }>) => {
+        if (!settings) {
+            return;
+        }
+        const merged = {...widthsRef.current, ...patch};
+        void saveSettings({...settings, columnWidths: {...settings.columnWidths, ...merged}});
+    }, [saveSettings, settings]);
+
+    const getFeedsWidth = useCallback(() => widthsRef.current.feeds, []);
+    const getHeadlinesWidth = useCallback(() => widthsRef.current.headlines, []);
+    const setFeedsWidth = useCallback((value: number) => setWidths((prev) => ({...(prev ?? widthsRef.current), feeds: value})), []);
+    const setHeadlinesWidth = useCallback((value: number) => setWidths((prev) => ({...(prev ?? widthsRef.current), headlines: value})), []);
+    const commitFeedsWidth = useCallback((value: number) => persistWidths({feeds: value}), [persistWidths]);
+    const commitHeadlinesWidth = useCallback((value: number) => persistWidths({headlines: value}), [persistWidths]);
+
+    const onFeedsResize = useDragWidth(getFeedsWidth, 160, setFeedsWidth, commitFeedsWidth);
+    const onHeadlinesResize = useDragWidth(getHeadlinesWidth, 240, setHeadlinesWidth, commitHeadlinesWidth);
 
     const invalidate = useCallback(() => {
         useRssListAllStore.getState().getRssList.markStale();
@@ -408,10 +437,11 @@ function RssListPage() {
     return (
         <div className="flex h-screen" data-layout={layout}>
             {showFeeds && (
-                <aside
-                    className="flex shrink-0 flex-col border-r"
-                    style={{width: columnWidths.feeds, fontSize: `${fontScales.feeds}%`}}
-                >
+                <>
+                    <aside
+                        className="flex shrink-0 flex-col border-r"
+                        style={{width: effectiveWidths.feeds, fontSize: `${fontScales.feeds}%`}}
+                    >
                     <div className="border-b px-3 py-2 text-sm font-medium">{t("reader.feeds")}</div>
                     <div className="grow overflow-y-auto" role="listbox" aria-label={t("reader.feeds")}>
                         <button
@@ -447,12 +477,19 @@ function RssListPage() {
                             </button>
                         ))}
                     </div>
-                </aside>
+                    </aside>
+                    <div
+                        onPointerDown={onFeedsResize}
+                        role="separator"
+                        aria-orientation="vertical"
+                        className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40"
+                    />
+                </>
             )}
 
             <aside
                 className="flex shrink-0 flex-col border-r"
-                style={{width: layout === "list" ? "100%" : columnWidths.headlines, fontSize: `${fontScales.headlines}%`}}
+                style={{width: layout === "list" ? "100%" : effectiveWidths.headlines, fontSize: `${fontScales.headlines}%`}}
             >
                 <div className="flex gap-2 border-b p-2">
                     <Input
@@ -506,6 +543,15 @@ function RssListPage() {
                     ))}
                 </div>
             </aside>
+
+            {showContent && (
+                <div
+                    onPointerDown={onHeadlinesResize}
+                    role="separator"
+                    aria-orientation="vertical"
+                    className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40"
+                />
+            )}
 
             {showContent && (
                 <main className="grow overflow-y-auto p-4" style={{fontSize: `${fontScales.content}%`}}>
