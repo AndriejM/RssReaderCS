@@ -35,6 +35,16 @@ export function ThemeProvider({
     root.classList.add(theme)
   }, [theme])
 
+  useEffect(() => {
+    const handler = (event: StorageEvent) => {
+      if (event.key === storageKey && event.newValue) {
+        setTheme(event.newValue as Theme)
+      }
+    }
+    window.addEventListener("storage", handler)
+    return () => window.removeEventListener("storage", handler)
+  }, [storageKey])
+
   const value = {
     theme,
     setTheme: (theme: Theme) => {

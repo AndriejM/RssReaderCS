@@ -413,9 +413,11 @@ function RssListPage() {
                     style={{width: columnWidths.feeds, fontSize: `${fontScales.feeds}%`}}
                 >
                     <div className="border-b px-3 py-2 text-sm font-medium">{t("reader.feeds")}</div>
-                    <div className="grow overflow-y-auto">
+                    <div className="grow overflow-y-auto" role="listbox" aria-label={t("reader.feeds")}>
                         <button
                             type="button"
+                            role="option"
+                            aria-selected={selectedFeed === ALL_FEEDS}
                             onClick={() => setSelectedFeed(ALL_FEEDS)}
                             className={cn(
                                 "flex w-full items-center justify-between border-b px-3 py-2 text-left hover:bg-accent",
@@ -429,6 +431,8 @@ function RssListPage() {
                             <button
                                 key={feed.uuid}
                                 type="button"
+                                role="option"
+                                aria-selected={selectedFeed === feed.uuid}
                                 onClick={() => setSelectedFeed(feed.uuid)}
                                 className={cn(
                                     "flex w-full items-center justify-between border-b px-3 py-2 text-left hover:bg-accent",
@@ -475,15 +479,18 @@ function RssListPage() {
                             {option}
                         </Button>
                     ))}
-                    <span className="ml-auto text-xs text-muted-foreground">
+                    <span className="ml-auto text-xs text-muted-foreground" aria-live="polite">
                         {filtered.length} {t("reader.shown")} / {totalUnread} {t("reader.unread")}
                     </span>
                 </div>
-                <div className="grow overflow-y-auto">
+                <div className="grow overflow-y-auto" role="listbox" aria-label={t("reader.headlines")}>
                     {filtered.map((item) => (
                         <button
                             key={item.id ?? item.link}
                             type="button"
+                            role="option"
+                            aria-selected={item.id === activeId}
+                            aria-current={item.id === activeId ? "true" : undefined}
                             onClick={() => void select(item)}
                             className={cn(
                                 "block w-full border-b px-3 py-2 text-left hover:bg-accent",

@@ -32,6 +32,7 @@ const en: Dictionary = {
   'reader.unknownFeed': 'Unknown feed',
   'reader.feeds': 'Feeds',
   'reader.allFeeds': 'All feeds',
+  'reader.headlines': 'Headlines',
   'reader.shortcuts': 'Keyboard shortcuts',
   'reader.fullText': 'Full text',
   'reader.markRead': 'Mark read',
@@ -69,6 +70,7 @@ const ru: Dictionary = {
   'reader.unknownFeed': 'Неизвестный фид',
   'reader.feeds': 'Фиды',
   'reader.allFeeds': 'Все фиды',
+  'reader.headlines': 'Заголовки',
   'reader.shortcuts': 'Горячие клавиши',
   'reader.fullText': 'Полный текст',
   'reader.markRead': 'Прочитано',
@@ -210,3 +212,15 @@ export function t(key: string, params?: Record<string, string | number>): string
 }
 
 document.documentElement.lang = currentLanguage;
+
+window.addEventListener('storage', (event) => {
+  if (event.key !== 'rss-language') {
+    return;
+  }
+  const next = event.newValue as Language | null;
+  if (next && LANGUAGES.includes(next) && next !== currentLanguage) {
+    currentLanguage = next;
+    document.documentElement.lang = next;
+    listeners.forEach((listener) => listener());
+  }
+});
