@@ -27,41 +27,50 @@ export const eslintBoundariesConfig = {
     ],
   },
   rules: {
-    "boundaries/element-types": [
-      2,
-      {
-        default: "allow",
-        rules: [
-          {
-            from: "shared",
-            disallow: ["app", "features"],
-            message:
-              "Модуль нижележащего слоя (${file.type}) не может импортировать модуль вышележащего слоя (${dependency.type})",
-          },
-          {
-            from: "features",
-            disallow: ["app"],
-            message:
-              "Модуль нижележащего слоя (${file.type}) не может импортировать модуль вышележащего слоя (${dependency.type})",
-          },
-        ],
-      },
-    ],
-    "boundaries/entry-point": [
+    "boundaries/dependencies": [
       2,
       {
         default: "disallow",
-        message:
-          "Модуль (${file.type}) должен импортироваться через public API. Прямой импорт из ${dependency.source} запрещен",
-
-        rules: [
+        policies: [
           {
-            target: ["shared", "app"],
-            allow: "**",
+            from: { element: { type: "shared" } },
+            allow: {
+              to: { element: { type: "shared" } },
+            },
           },
           {
-            target: ["features"],
-            allow: ["index.(ts|tsx)", "*.page.tsx"],
+            from: { element: { type: "features" } },
+            allow: {
+              to: { element: { type: "shared" } },
+            },
+          },
+          {
+            from: { element: { type: "features" } },
+            allow: {
+              to: {
+                element: {
+                  type: "features",
+                  fileInternalPath: ["index.(ts|tsx)", "*.page.tsx"],
+                },
+              },
+            },
+          },
+          {
+            from: { element: { type: "app" } },
+            allow: {
+              to: { element: { type: "shared" } },
+            },
+          },
+          {
+            from: { element: { type: "app" } },
+            allow: {
+              to: {
+                element: {
+                  type: "features",
+                  fileInternalPath: ["index.(ts|tsx)", "*.page.tsx"],
+                },
+              },
+            },
           },
         ],
       },

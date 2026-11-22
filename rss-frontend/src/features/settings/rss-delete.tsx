@@ -1,6 +1,6 @@
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/shared/ui/kit/tooltip.tsx";
 import {Button} from "@/shared/ui/kit/button.tsx";
-import {CircleX, Trash} from "lucide-react";
+import {CircleX} from "lucide-react";
 import useConfirmationStore from "@/shared/storage/confirmation-store.ts";
 
 export type RssDeleteProps = {

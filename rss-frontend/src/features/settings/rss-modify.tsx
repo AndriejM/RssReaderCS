@@ -60,16 +60,18 @@ export const RssModify = () => {
     } else {
       uuid = uuidv4();
     }
-    onAction({uuid, name: values.name, url: values.url, refreshCronExpression: values.refreshCronExpression });
+    onAction({uuid, name: values.name, url: values.url, refreshCronExpression: values.refreshCronExpression ?? "" });
     form.reset();
     closeRssModify();
   }
 
   useEffect(() => {
-    form.setValue("name", rssConfig?.name);
-    form.setValue("url", rssConfig?.url);
-    form.setValue("refreshCronExpression", rssConfig?.refreshCronExpression);
-  }, [rssConfig]);
+    form.reset({
+      name: rssConfig?.name ?? "",
+      url: rssConfig?.url ?? "",
+      refreshCronExpression: rssConfig?.refreshCronExpression ?? "",
+    });
+  }, [rssConfig, form]);
 
   return (
       <Dialog open={open} onOpenChange={closeRssModify}>

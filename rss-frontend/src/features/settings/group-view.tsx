@@ -1,4 +1,4 @@
-import type {Group, RssConfig} from "@/shared/model/types.ts";
+import type {Group, RssConfig, UserConfig} from "@/shared/model/types.ts";
 import {Table, TableBody, TableCell, TableHead, TableHeader, TableRow} from "@/shared/ui/kit/table";
 import {userConfigStore, userConfigStoreAsync} from "@/shared/storage/user-config-store.ts";
 import {GroupDelete} from "@/features/settings/group-delete.tsx";
@@ -24,23 +24,39 @@ export function GroupView(props: GroupViewProps) {
   const group = props.group;
 
   function deleteGroupHandler(uuid: string) {
-    props.deleteGroupHandler(uuid);
+    props.deleteGroupHandler?.(uuid);
+  }
+
+  function updateGroup(updatedGroup: Group) {
+    if (!userConfig) return;
+    const updatedUserConfig: UserConfig = {
+      ...userConfig,
+      userConfigPayload: {
+        ...userConfig.userConfigPayload,
+        groups: userConfig.userConfigPayload.groups.map((item) =>
+          item.uuid === updatedGroup.uuid ? updatedGroup : item
+        ),
+      },
+    };
+    saveUserConfig(updatedUserConfig);
   }
 
   function deleteRssHandle(uuid: string) {
     console.log("delete rss config uuid:" + JSON.stringify(uuid));
-    props.group.rssConfigs = props.group.rssConfigs
-    .filter((obj) => obj.uuid !== uuid);
-    saveUserConfig(userConfig)
+    updateGroup({
+      ...group,
+      rssConfigs: group.rssConfigs.filter((obj) => obj.uuid !== uuid),
+    });
   }
 
   function saveRssHandler(rssConfig: RssConfig) {
     console.log("Save" + JSON.stringify(rssConfig));
-
-    props.group.rssConfigs = props.group.rssConfigs
-    .filter((obj) => obj.uuid !== rssConfig.uuid)
-    .concat(rssConfig);
-    saveUserConfig(userConfig)
+    updateGroup({
+      ...group,
+      rssConfigs: group.rssConfigs
+        .filter((obj) => obj.uuid !== rssConfig.uuid)
+        .concat(rssConfig),
+    });
   }
 
   return (
@@ -118,7 +134,7 @@ export function GroupView(props: GroupViewProps) {
                 description: "Modify Group",
                 cancelLabel: "Cancel",
                 actionLabel: "Modify",
-                onAction: (group: Group) => {props.modifyGroupHandler(group) },
+                onAction: (group: Group) => {props.modifyGroupHandler?.(group) },
                 onCancel: () => { },
                 group: group
               });

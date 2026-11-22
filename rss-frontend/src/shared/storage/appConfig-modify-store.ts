@@ -32,13 +32,13 @@ const useAppConfigModifyStore = create<AppConfigModifyState & AppConfigModifyAct
       description: null,
       cancelLabel: null,
       actionLabel: null,
-      onAction: (appConfig: AppConfig) => {
+      onAction: () => {
       },
       onCancel: () => {
       },
       appConfig: undefined,
       openAppConfigModify: (data) =>
-          set((state) => ({
+          set(() => ({
             open: true,
             title: data.title,
             description: data.description,
@@ -49,13 +49,13 @@ const useAppConfigModifyStore = create<AppConfigModifyState & AppConfigModifyAct
             appConfig: data.appConfig
           })),
       closeAppConfigModify: () =>
-          set((state) => ({
+          set(() => ({
             open: false,
             title: null,
             description: null,
             cancelLabel: null,
             actionLabel: null,
-            onAction: (appConfig: AppConfig) => {},
+            onAction: () => {},
             onCancel: () => {
             },
             appConfig: undefined

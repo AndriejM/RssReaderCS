@@ -10,7 +10,7 @@ import {
 } from "@/shared/ui/kit/accordion"
 
 import {Card, CardAction, CardContent, CardHeader, CardTitle,} from "@/shared/ui/kit/card"
-import type {Group} from "@/shared/model/types.ts";
+import type {Group, UserConfig} from "@/shared/model/types.ts";
 import {toast} from "sonner";
 import {GroupModify} from "@/features/settings/group-modify.tsx";
 import {Button} from "@/shared/ui/kit/button.tsx";
@@ -25,31 +25,50 @@ export function UserConfigSettings() {
   const saveUserConfig = userConfigStore((state) => state.saveUserConfig.trigger);
   const { openGroupModify } = useGroupModifyStore();
 
+  const defaultUserId = appConfig?.appConfigPayload?.defaultUserId;
+
   useEffect(() => {
-    updateUserId(appConfig.appConfigPayload.defaultUserId);
-  }, []);
+    if (defaultUserId !== undefined) {
+      updateUserId(defaultUserId);
+    }
+  }, [defaultUserId, updateUserId]);
+
+  function saveUserConfigWithGroups(groups: Group[]) {
+    if (!userConfig) return;
+    const updatedUserConfig: UserConfig = {
+      ...userConfig,
+      userConfigPayload: {
+        ...userConfig.userConfigPayload,
+        groups,
+      },
+    };
+    saveUserConfig(updatedUserConfig);
+  }
 
   function addGroup(group: Group) {
+    if (!userConfig) return;
     console.log("add group:" + group);
-    userConfig.userConfigPayload.groups.push(group);
-    saveUserConfig(userConfig);
+    saveUserConfigWithGroups([...userConfig.userConfigPayload.groups, group]);
   }
 
   function deleteGroup(uuid: string | undefined) {
+    if (!userConfig) return;
     if (userConfig.userConfigPayload.groups.length <= 1) {
       toast.warning("You can't delete last group!", { position: "top-center" });
       return;
     }
-     userConfig.userConfigPayload.groups = userConfig.userConfigPayload.groups
-     .filter((obj) => obj.uuid !== uuid);
-     saveUserConfig(userConfig)
+    saveUserConfigWithGroups(
+      userConfig.userConfigPayload.groups.filter((obj) => obj.uuid !== uuid)
+    );
   }
 
   function modifyGroup(group: Group) {
-    userConfig.userConfigPayload.groups = userConfig.userConfigPayload.groups
-    .filter((obj) => obj.uuid !== group.uuid)
-    .concat(group);
-    saveUserConfig(userConfig)
+    if (!userConfig) return;
+    saveUserConfigWithGroups(
+      userConfig.userConfigPayload.groups
+        .filter((obj) => obj.uuid !== group.uuid)
+        .concat(group)
+    );
   }
 
   return (

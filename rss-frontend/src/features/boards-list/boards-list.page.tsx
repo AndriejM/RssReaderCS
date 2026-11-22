@@ -1,4 +1,5 @@
 import {Button} from "@/shared/ui/kit/button.tsx";
+import type {AppConfig} from "@/shared/model/types.ts";
 import {useAppConfigStore, useAppConfigStoreAsync} from "@/shared/storage/app-config-store.ts";
 
 function BoardsListPage() {
@@ -10,9 +11,15 @@ function BoardsListPage() {
   const setCurrentUser = useAppConfigStore((state) => state.setCurrentUser.trigger);
 
   const handleSave = () => {
-    const newAppConf = appConfig;
-    newAppConf.appConfigPayload.daysForSetRead = 1;
-    saveAppConfig(newAppConf);
+    if (!appConfig) return;
+    const newAppConfig: AppConfig = {
+      ...appConfig,
+      appConfigPayload: {
+        ...appConfig.appConfigPayload,
+        daysForSetRead: 1,
+      },
+    };
+    saveAppConfig(newAppConfig);
   };
 
   const handleSetCurrent = () => {

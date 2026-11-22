@@ -1,7 +1,7 @@
 import {useAppConfigStore, useAppConfigStoreAsync} from "@/shared/storage/app-config-store.ts";
 
 import {Card, CardAction, CardContent, CardHeader, CardTitle,} from "@/shared/ui/kit/card"
-import type {AppConfig, RssConfig} from "@/shared/model/types.ts";
+import type {AppConfig} from "@/shared/model/types.ts";
 import {
   Table,
   TableBody,

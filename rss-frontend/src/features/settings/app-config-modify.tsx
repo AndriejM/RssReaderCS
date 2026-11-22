@@ -10,7 +10,7 @@ import {
 } from "@/shared/ui/kit/form.tsx";
 import {Button} from "@/shared/ui/kit/button.tsx";
 import * as z from "zod";
-import {useForm} from "react-hook-form";
+import {type Resolver, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {Input} from "@/shared/ui/kit/input.tsx";
 import {
@@ -23,6 +23,7 @@ import {
 } from "@/shared/ui/kit/dialog.tsx";
 import {Switch} from "@/shared/ui/kit/switch.tsx";
 import useAppConfigModifyStore from "@/shared/storage/appConfig-modify-store.ts";
+import type {AppConfig} from "@/shared/model/types.ts";
 
 const formSchema = z.object({
   daysForCleanRssItems: z
@@ -52,21 +53,24 @@ const formSchema = z.object({
 export const AppConfigModify = () => {
   const { open, title, description, cancelLabel, actionLabel, onAction, closeAppConfigModify, appConfig } = useAppConfigModifyStore();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  type AppConfigFormValues = z.output<typeof formSchema>;
+
+  const form = useForm<AppConfigFormValues>({
+    resolver: zodResolver(formSchema) as Resolver<AppConfigFormValues, unknown, AppConfigFormValues>,
     defaultValues: {
-      daysForCleanRssItems: appConfig?.appConfigPayload?.daysForCleanRssItems || 4,
-      daysForSetRead: appConfig?.appConfigPayload?.daysForSetRead || 1,
-      isSetClickedRssToRead: appConfig?.appConfigPayload?.isSetClickedRssToRead || true,
+      daysForCleanRssItems: appConfig?.appConfigPayload?.daysForCleanRssItems ?? 4,
+      daysForSetRead: appConfig?.appConfigPayload?.daysForSetRead ?? 1,
+      isSetClickedRssToRead: appConfig?.appConfigPayload?.isSetClickedRssToRead ?? true,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  function onSubmit(values: AppConfigFormValues) {
     console.log(values);
-    const newAppConfig = {
-      ...appConfig,
+    const payload = appConfig?.appConfigPayload;
+    const newAppConfig: AppConfig = {
+      id: appConfig?.id ?? 0,
       appConfigPayload: {
-        ...appConfig?.appConfigPayload,
+        defaultUserId: payload?.defaultUserId ?? 0,
         daysForCleanRssItems: values.daysForCleanRssItems,
         daysForSetRead: values.daysForSetRead,
         isSetClickedRssToRead: values.isSetClickedRssToRead,
@@ -78,10 +82,12 @@ export const AppConfigModify = () => {
   }
 
   useEffect(() => {
-    form.setValue("daysForCleanRssItems", appConfig?.appConfigPayload?.daysForCleanRssItems);
-    form.setValue("daysForSetRead", appConfig?.appConfigPayload?.daysForSetRead);
-    form.setValue("isSetClickedRssToRead", appConfig?.appConfigPayload?.isSetClickedRssToRead);
-  }, [appConfig]);
+    form.reset({
+      daysForCleanRssItems: appConfig?.appConfigPayload?.daysForCleanRssItems ?? 4,
+      daysForSetRead: appConfig?.appConfigPayload?.daysForSetRead ?? 1,
+      isSetClickedRssToRead: appConfig?.appConfigPayload?.isSetClickedRssToRead ?? true,
+    });
+  }, [appConfig, form]);
 
   return (
       <Dialog open={open} onOpenChange={closeAppConfigModify}>

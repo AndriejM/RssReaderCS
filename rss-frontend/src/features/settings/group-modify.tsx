@@ -1,5 +1,5 @@
-import type {Group, RssConfig} from "@/shared/model/types.ts";
-import {useEffect, useState} from "react";
+import type {RssConfig} from "@/shared/model/types.ts";
+import {useEffect} from "react";
 import {
   Form,
   FormControl,
@@ -20,13 +20,9 @@ import {
   DialogContent, DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from "@/shared/ui/kit/dialog.tsx";
-import {Pencil, Trash} from "lucide-react";
 import {v4 as uuidv4} from 'uuid';
-import {Tooltip, TooltipContent, TooltipTrigger} from "@/shared/ui/kit/tooltip.tsx";
-import useConfirmationStore from "@/shared/storage/confirmation-store.ts";
 import useGroupModifyStore from "@/shared/storage/group-modify-store.ts";
 
 const formSchema = z.object({
@@ -66,8 +62,8 @@ export const GroupModify = () => {
   }
 
   useEffect(() => {
-    form.setValue("name", group?.name)
-  }, [group]);
+    form.reset({ name: group?.name ?? "" });
+  }, [group, form]);
 
   return (
       <Dialog open={open} onOpenChange={closeGroupModify}>

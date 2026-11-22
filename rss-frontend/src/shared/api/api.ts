@@ -10,7 +10,9 @@ const apiClient = axios.create({
 });
 
 // Define a generic API function
-export const apiRequest = async <T = any, P = any>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE', data?: P): Promise<T> => {
+type UserIdGetter = () => { userId: number | null };
+
+export const apiRequest = async <T = unknown, P = unknown>(url: string, method: 'GET' | 'POST' | 'PUT' | 'DELETE', data?: P): Promise<T> => {
   try {
     const response: AxiosResponse<T> = await apiClient({
       method,
@@ -47,7 +49,7 @@ export const createUser = (user: User) => {
 export const getUserConfig = () => {
   return apiRequest<UserConfig[]>("/user-config/find", "GET");
 }
-export const getUserConfigById = (get: any)=> async () => {
+export const getUserConfigById = (get: UserIdGetter) => async () => {
   const userId = get().userId;
   if (!userId) {return null}
   return await apiRequest<UserConfig>(`/user-config/find/${userId}`, "GET");
@@ -58,7 +60,7 @@ export const saveUserConfig = (userConfig: UserConfig) => {
 export const deleteUserConfig = (userId: number) => {
   return apiRequest<void, void>(`/user-config/delete/${userId}`, "DELETE");
 }
-export const getRssListByUser = (get: any)=> async () => {
+export const getRssListByUser = (get: UserIdGetter) => async () => {
   const userId = get().userId;
   if (!userId) {return []}
   return await apiRequest<RssItem[]>(`/rss/list/${userId}`, "GET");

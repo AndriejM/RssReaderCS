@@ -9,7 +9,7 @@ export interface AppConfigStore {
   setCurrentUser: Effect<AppConfigStore, [number]>;
 }
 
-export const useAppConfigStore = create<AppConfigStore>((set) => ({
+export const useAppConfigStore = create<AppConfigStore>(() => ({
   appConfig: query(getAppConfig, (s) => [s.saveAppConfig, s.setCurrentUser]), //invalidate todos when createTodo succeeds
   saveAppConfig: effect(saveAppConfig),
   setCurrentUser: effect(setCurrentUser),

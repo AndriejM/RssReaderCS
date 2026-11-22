@@ -32,11 +32,11 @@ const useRssModifyStore = create<RssModifyState & RssModifyActions>(
       description: null,
       cancelLabel: null,
       actionLabel: null,
-      onAction: (rssConfig: RssConfig) => {},
+      onAction: () => {},
       onCancel: () => {},
       rssConfig: undefined,
       openRssModify: (data) =>
-          set((state) => ({
+          set(() => ({
             open: true,
             title: data.title,
             description: data.description,
@@ -47,13 +47,13 @@ const useRssModifyStore = create<RssModifyState & RssModifyActions>(
             rssConfig: data.rssConfig,
           })),
       closeRssModify: () =>
-          set((state) => ({
+          set(() => ({
             open: false,
             title: null,
             description: null,
             cancelLabel: null,
             actionLabel: null,
-            onAction: (rssConfig: RssConfig) => {},
+            onAction: () => {},
             onCancel: () => {},
             rssConfig: undefined
           })),

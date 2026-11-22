@@ -32,11 +32,11 @@ const useGroupModifyStore = create<GroupModifyState & GroupModifyActions>(
       description: null,
       cancelLabel: null,
       actionLabel: null,
-      onAction: (group: Group) => {},
+      onAction: () => {},
       onCancel: () => {},
       group: undefined,
       openGroupModify: (data) =>
-          set((state) => ({
+          set(() => ({
             open: true,
             title: data.title,
             description: data.description,
@@ -47,13 +47,13 @@ const useGroupModifyStore = create<GroupModifyState & GroupModifyActions>(
             group: data.group,
           })),
       closeGroupModify: () =>
-          set((state) => ({
+          set(() => ({
             open: false,
             title: null,
             description: null,
             cancelLabel: null,
             actionLabel: null,
-            onAction: (group: Group) => {},
+            onAction: () => {},
             onCancel: () => {},
             group: undefined
           })),

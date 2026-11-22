@@ -7,7 +7,7 @@ import {
 } from "@/shared/api/api.ts";
 
 export interface UserConfigStore {
-  getUserConfig: Query<UserConfigStore, UserConfig>;
+  getUserConfig: Query<UserConfigStore, UserConfig | null>;
   saveUserConfig: Effect<UserConfigStore, [UserConfig]>;
   userId: number | null;
   updateUserId: (userId: number) => void;

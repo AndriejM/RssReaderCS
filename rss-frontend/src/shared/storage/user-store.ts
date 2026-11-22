@@ -8,7 +8,7 @@ export interface UserStore {
   createUser: Effect<UserStore, [User]>;
 }
 
-export const useUserStore = create<UserStore>((set) => ({
+export const useUserStore = create<UserStore>(() => ({
   getUser: query(getUser, (s) => [s.createUser]), //invalidate todos when createTodo succeeds
   createUser: effect(createUser)
 }));
