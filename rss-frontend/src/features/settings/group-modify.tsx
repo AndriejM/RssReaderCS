@@ -1,5 +1,5 @@
 import type {RssConfig} from "@/shared/model/types.ts";
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import {
   Form,
   FormControl,
@@ -24,16 +24,21 @@ import {
 } from "@/shared/ui/kit/dialog.tsx";
 import {v4 as uuidv4} from 'uuid';
 import useGroupModifyStore from "@/shared/storage/group-modify-store.ts";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  })
-});
+function makeFormSchema(t: (key: string) => string) {
+  return z.object({
+    name: z.string().min(2, {
+      message: t("form.nameMin2"),
+    })
+  });
+}
 
 export const GroupModify = () => {
   const { open, title, description, cancelLabel, actionLabel, onAction, closeGroupModify, group } = useGroupModifyStore();
+  const { t } = useI18n();
 
+  const formSchema = useMemo(() => makeFormSchema(t), [t]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -80,12 +85,12 @@ export const GroupModify = () => {
                   name="name"
                   render={({field}) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
+                        <FormLabel>{t("form.name")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Group name" {...field} />
+                          <Input placeholder={t("form.nameGroupPlaceholder")} {...field} />
                         </FormControl>
                         <FormDescription>
-                          Enter group name.
+                          {t("form.enterGroupName")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>

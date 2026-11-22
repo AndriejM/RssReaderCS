@@ -13,6 +13,7 @@ import {Pencil, PlusCircle, RefreshCw} from "lucide-react";
 import useGroupModifyStore from "@/shared/storage/group-modify-store.ts";
 import useRssModifyStore from "@/shared/storage/rss-modify-store.ts";
 import {refreshFeed} from "@/shared/api/api.ts";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
 export type GroupViewProps = {
   group: Group;
@@ -26,38 +27,38 @@ type Health = {
   tooltip: string;
 };
 
-function health(rssConfig: RssConfig): Health {
+function health(rssConfig: RssConfig, t: (key: string, params?: Record<string, string | number>) => string): Health {
   const lastError = rssConfig.lastErrorAt ? new Date(rssConfig.lastErrorAt).getTime() : 0;
   const lastOk = rssConfig.lastOkAt ? new Date(rssConfig.lastOkAt).getTime() : 0;
 
   if (lastError && lastError >= lastOk) {
     return {
-      label: "Error",
+      label: t("health.error"),
       variant: "destructive",
-      tooltip: rssConfig.lastErrorMessage ?? rssConfig.lastErrorAt ?? "Last fetch failed",
+      tooltip: rssConfig.lastErrorMessage ?? rssConfig.lastErrorAt ?? t("health.lastFailed"),
     };
   }
 
   if (rssConfig.nextRetryAt) {
     return {
-      label: "Retry",
+      label: t("health.retry"),
       variant: "secondary",
-      tooltip: `Next retry: ${rssConfig.nextRetryAt}`,
+      tooltip: t("health.nextRetry", {time: rssConfig.nextRetryAt}),
     };
   }
 
   if (rssConfig.lastOkAt) {
     return {
-      label: "OK",
+      label: t("health.ok"),
       variant: "outline",
-      tooltip: `Last ok: ${rssConfig.lastOkAt}`,
+      tooltip: t("health.lastOk", {time: rssConfig.lastOkAt}),
     };
   }
 
   return {
-    label: "New",
+    label: t("health.new"),
     variant: "outline",
-    tooltip: "No fetch yet",
+    tooltip: t("health.noFetch"),
   };
 }
 
@@ -67,6 +68,7 @@ export function GroupView(props: GroupViewProps) {
   const saveUserConfig = userConfigStore((state) => state.saveUserConfig.trigger);
   const { openGroupModify } = useGroupModifyStore();
   const { openRssModify } = useRssModifyStore();
+  const { t } = useI18n();
   const group = props.group;
   const [refreshingUuid, setRefreshingUuid] = useState<string | null>(null);
 
@@ -113,17 +115,17 @@ export function GroupView(props: GroupViewProps) {
     try {
       const result = await refreshFeed(() => ({userId: userConfig.id}))(rssConfig.uuid);
       if (!result) {
-        toast.warning("No user selected.");
+        toast.warning(t("common.noUser"));
       } else if (result.busy) {
-        toast.warning(`${rssConfig.name} is busy.`);
+        toast.warning(t("group.busy", {name: rssConfig.name}));
       } else if (!result.ok) {
-        toast.error(result.error ?? `${rssConfig.name} failed.`);
+        toast.error(result.error ?? t("group.failed", {name: rssConfig.name}));
       } else {
-        toast.success(`${rssConfig.name}: +${result.added}${result.notModified ? " (not modified)" : ""}`);
+        toast.success(t("group.refreshed", {name: rssConfig.name, added: result.added}) + (result.notModified ? t("group.notModified") : ""));
       }
       useRssListAllStore.getState().getRssList.markStale();
     } catch {
-      toast.error("Could not refresh feed.");
+      toast.error(t("group.refreshError"));
     } finally {
       setRefreshingUuid(null);
     }
@@ -134,19 +136,19 @@ export function GroupView(props: GroupViewProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Url</TableHead>
-              <TableHead>Refresh Cron</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Action&nbsp;&nbsp;&nbsp;
+              <TableHead>{t("common.name")}</TableHead>
+              <TableHead>{t("common.url")}</TableHead>
+              <TableHead>{t("group.refreshCron")}</TableHead>
+              <TableHead>{t("group.status")}</TableHead>
+              <TableHead>{t("group.action")}&nbsp;&nbsp;&nbsp;
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" aria-label="Submit" onClick={() =>{
+                    <Button variant="outline" size="icon" aria-label={t("group.addRss")} onClick={() =>{
                       openRssModify({
-                        title: "Add Rss config",
-                        description: "Add Rss config",
-                        cancelLabel: "Cancel",
-                        actionLabel: "Add",
+                        title: t("group.addRss"),
+                        description: t("group.addRss"),
+                        cancelLabel: t("common.cancel"),
+                        actionLabel: t("common.add"),
                         onAction: (rssConfig: RssConfig) => {saveRssHandler(rssConfig) },
                         onCancel: () => { },
                         rssConfig: undefined
@@ -156,7 +158,7 @@ export function GroupView(props: GroupViewProps) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>Add rss config</p>
+                    <p>{t("group.addRss")}</p>
                   </TooltipContent>
                 </Tooltip>
               </TableHead>
@@ -164,7 +166,7 @@ export function GroupView(props: GroupViewProps) {
           </TableHeader>
           <TableBody>
             {props.group?.rssConfigs?.map((rssConfig) => {
-              const feedHealth = health(rssConfig);
+              const feedHealth = health(rssConfig, t);
               return (
                 <TableRow key={rssConfig.uuid}>
                   <TableCell>{rssConfig.name}</TableCell>
@@ -186,7 +188,7 @@ export function GroupView(props: GroupViewProps) {
                         <Button
                           variant="outline"
                           size="icon"
-                          aria-label="Load now"
+                          aria-label={t("group.loadNow")}
                           disabled={refreshingUuid === rssConfig.uuid}
                           onClick={() => void refreshFeedHandler(rssConfig)}
                         >
@@ -194,18 +196,18 @@ export function GroupView(props: GroupViewProps) {
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Load now</p>
+                        <p>{t("group.loadNow")}</p>
                       </TooltipContent>
                     </Tooltip>
 
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" aria-label="Submit" onClick={() =>{
+                        <Button variant="outline" size="icon" aria-label={t("group.modifyRss")} onClick={() =>{
                           openRssModify({
-                                            title: "Modify Rss config",
-                                            description: "Modify Rss config",
-                                            cancelLabel: "Cancel",
-                                            actionLabel: "Modify",
+                                            title: t("group.modifyRss"),
+                                            description: t("group.modifyRss"),
+                                            cancelLabel: t("common.cancel"),
+                                            actionLabel: t("common.modify"),
                                             onAction: (rssConfig: RssConfig) => {saveRssHandler(rssConfig) },
                           onCancel: () => { },
                           rssConfig: rssConfig
@@ -215,7 +217,7 @@ export function GroupView(props: GroupViewProps) {
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Modify rss config</p>
+                        <p>{t("group.modifyRss")}</p>
                       </TooltipContent>
                     </Tooltip>
 
@@ -229,12 +231,12 @@ export function GroupView(props: GroupViewProps) {
         </Table>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Submit" onClick={() => {
+            <Button variant="outline" size="icon" aria-label={t("group.modifyGroup")} onClick={() => {
               openGroupModify({
-                title: "Modify Group",
-                description: "Modify Group",
-                cancelLabel: "Cancel",
-                actionLabel: "Modify",
+                title: t("settings.groups.modifyTitle"),
+                description: t("settings.groups.modifyDesc"),
+                cancelLabel: t("common.cancel"),
+                actionLabel: t("common.modify"),
                 onAction: (group: Group) => {props.modifyGroupHandler?.(group) },
                 onCancel: () => { },
                 group: group
@@ -244,7 +246,7 @@ export function GroupView(props: GroupViewProps) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Modify group</p>
+            <p>{t("group.modifyGroup")}</p>
           </TooltipContent>
         </Tooltip>
         <GroupDelete deleteGroupHandler={deleteGroupHandler} uuid={props.group.uuid}/>

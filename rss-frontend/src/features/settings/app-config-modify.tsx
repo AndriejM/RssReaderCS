@@ -1,4 +1,4 @@
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import {
   Form,
   FormControl,
@@ -24,34 +24,40 @@ import {
 import {Switch} from "@/shared/ui/kit/switch.tsx";
 import useAppConfigModifyStore from "@/shared/storage/appConfig-modify-store.ts";
 import type {AppConfig} from "@/shared/model/types.ts";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
-const formSchema = z.object({
-  daysForCleanRssItems: z
-  .coerce
-  .number("daysForCleanRssItems must be a whole number")
-  .positive("daysForCleanRssItems must be positive")
-  .min(2, {
-    message: "daysForCleanRssItems must be greater than 2.",
-  }).max(10, {
-    message: "daysForCleanRssItems must be less than 10."
-  }),
-  daysForSetRead: z
-  .coerce
-  .number("daysForSetRead must be a whole number")
-  .positive("daysForSetRead must be positive")
-  .min(2, {
-    message: "daysForSetRead must be greater than 2.",
-  }).max(10, {
-    message: "daysForSetRead must be less than 10."
-  }),
-  isSetClickedRssToRead: z.boolean()
-}).refine(schema => {
-      return (schema.daysForSetRead < schema.daysForCleanRssItems)
-    }, {message: "daysForSetRead must be less than daysForCleanRssItems.", path: ["daysForSetRead"]}
-);
+function makeFormSchema(t: (key: string) => string) {
+  return z.object({
+    daysForCleanRssItems: z
+    .coerce
+    .number(t("appconfig.cleanWhole"))
+    .positive(t("appconfig.cleanPositive"))
+    .min(2, {
+      message: t("appconfig.cleanGreater"),
+    }).max(10, {
+      message: t("appconfig.cleanLess")
+    }),
+    daysForSetRead: z
+    .coerce
+    .number(t("appconfig.setReadWhole"))
+    .positive(t("appconfig.setReadPositive"))
+    .min(2, {
+      message: t("appconfig.setReadGreater"),
+    }).max(10, {
+      message: t("appconfig.setReadLess")
+    }),
+    isSetClickedRssToRead: z.boolean()
+  }).refine(schema => {
+        return (schema.daysForSetRead < schema.daysForCleanRssItems)
+      }, {message: t("appconfig.setReadLessThanClean"), path: ["daysForSetRead"]}
+  );
+}
 
 export const AppConfigModify = () => {
   const { open, title, description, cancelLabel, actionLabel, onAction, closeAppConfigModify, appConfig } = useAppConfigModifyStore();
+  const { t } = useI18n();
+
+  const formSchema = useMemo(() => makeFormSchema(t), [t]);
 
   type AppConfigFormValues = z.output<typeof formSchema>;
 
@@ -109,7 +115,7 @@ export const AppConfigModify = () => {
                           <Input placeholder="daysForCleanRssItems" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Enter daysForCleanRssItems.
+                          {t("appconfig.enterCleanDays")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>
@@ -125,7 +131,7 @@ export const AppConfigModify = () => {
                           <Input placeholder="daysForSetRead" {...field} />
                         </FormControl>
                         <FormDescription>
-                          Enter daysForSetRead.
+                          {t("appconfig.enterSetReadDays")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>
@@ -147,7 +153,7 @@ export const AppConfigModify = () => {
                           />
                         </FormControl>
                         <FormDescription>
-                          Set isSetClickedRssToRead.
+                          {t("appconfig.setClickedDesc")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>

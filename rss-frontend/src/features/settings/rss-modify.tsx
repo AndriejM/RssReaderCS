@@ -22,19 +22,13 @@ import {
 } from "@/shared/ui/kit/dialog.tsx";
 import { v4 as uuidv4 } from 'uuid';
 import useRssModifyStore from "@/shared/storage/rss-modify-store.ts";
-import {useEffect} from "react";
+import {useEffect, useMemo} from "react";
 import type {RssConfig} from "@/shared/model/types.ts";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
 function getRegexCheckExpression() {
   return /^((((\d+,)+\d+|(\d+(\/|-|#)\d+)|\d+L?|\*(\/\d+)?|L(-\d+)?|\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})$/
 }
-
-const optionalPositiveInt = z.union([
-  z.literal(""),
-  z.string().regex(/^\d+$/).refine((value) => Number(value) > 0, {
-    message: "Must be greater than 0.",
-  }),
-]).optional();
 
 function toOptionalInt(value?: string) {
   const trimmed = value?.trim();
@@ -45,22 +39,34 @@ function toOptionalInt(value?: string) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 }
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
-  }),
-  url: z.url({
-    message: "Please enter a valid url.",
-  }),
-  refreshCronExpression: z.string().regex(getRegexCheckExpression(), {
-    message: "Cron expression isn't valid.",
-  }).optional().or(z.literal('')),
-  refreshMinutes: optionalPositiveInt,
-  cleanMinutes: optionalPositiveInt,
-});
+function makeFormSchema(t: (key: string) => string) {
+  const optionalPositiveInt = z.union([
+    z.literal(""),
+    z.string().regex(/^\d+$/).refine((value) => Number(value) > 0, {
+      message: t("form.positiveInt"),
+    }),
+  ]).optional();
+
+  return z.object({
+    name: z.string().min(2, {
+      message: t("form.nameMin2"),
+    }),
+    url: z.url({
+      message: t("form.urlInvalid"),
+    }),
+    refreshCronExpression: z.string().regex(getRegexCheckExpression(), {
+      message: t("form.cronInvalid"),
+    }).optional().or(z.literal('')),
+    refreshMinutes: optionalPositiveInt,
+    cleanMinutes: optionalPositiveInt,
+  });
+}
 
 export const RssModify = () => {
   const { open, title, description, cancelLabel, actionLabel, onAction, closeRssModify, rssConfig } = useRssModifyStore();
+  const { t } = useI18n();
+
+  const formSchema = useMemo(() => makeFormSchema(t), [t]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -120,12 +126,12 @@ export const RssModify = () => {
                   name="name"
                   render={({field}) => (
                       <FormItem>
-                        <FormLabel>Name</FormLabel>
+                        <FormLabel>{t("form.name")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Rss name" {...field} />
+                          <Input placeholder={t("form.nameRssPlaceholder")} {...field} />
                         </FormControl>
                         <FormDescription>
-                          Enter rss name.
+                          {t("form.enterRssName")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>
@@ -137,12 +143,12 @@ export const RssModify = () => {
                   name="url"
                   render={({field}) => (
                       <FormItem>
-                        <FormLabel>Url</FormLabel>
+                        <FormLabel>{t("form.url")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Rss url" {...field} />
+                          <Input placeholder={t("form.urlPlaceholder")} {...field} />
                         </FormControl>
                         <FormDescription>
-                          Enter rss url.
+                          {t("form.enterRssUrl")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>
@@ -154,12 +160,12 @@ export const RssModify = () => {
                   name="refreshCronExpression"
                   render={({field}) => (
                       <FormItem>
-                        <FormLabel>Cron expression</FormLabel>
+                        <FormLabel>{t("form.cronLabel")}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Refresh cron expression" {...field} />
+                          <Input placeholder={t("form.cronPlaceholder")} {...field} />
                         </FormControl>
                         <FormDescription>
-                          Enter refresh cron expression.
+                          {t("form.enterCron")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>
@@ -171,13 +177,13 @@ export const RssModify = () => {
                   name="refreshMinutes"
                   render={({field}) => (
                       <FormItem>
-                        <FormLabel>Refresh minutes</FormLabel>
+                        <FormLabel>{t("form.refreshMinutesLabel")}</FormLabel>
                         <FormControl>
                           <Input
                               type="number"
                               min={1}
                               step={1}
-                              placeholder="Refresh every N minutes"
+                              placeholder={t("form.refreshMinutesPlaceholder")}
                               value={field.value ?? ""}
                               onChange={field.onChange}
                               onBlur={field.onBlur}
@@ -186,7 +192,7 @@ export const RssModify = () => {
                           />
                         </FormControl>
                         <FormDescription>
-                          Optional interval-based refresh override.
+                          {t("form.enterRefreshMinutes")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>
@@ -198,13 +204,13 @@ export const RssModify = () => {
                   name="cleanMinutes"
                   render={({field}) => (
                       <FormItem>
-                        <FormLabel>Clean minutes</FormLabel>
+                        <FormLabel>{t("form.cleanMinutesLabel")}</FormLabel>
                         <FormControl>
                           <Input
                               type="number"
                               min={1}
                               step={1}
-                              placeholder="Clean after N minutes"
+                              placeholder={t("form.cleanMinutesPlaceholder")}
                               value={field.value ?? ""}
                               onChange={field.onChange}
                               onBlur={field.onBlur}
@@ -213,7 +219,7 @@ export const RssModify = () => {
                           />
                         </FormControl>
                         <FormDescription>
-                          Optional per-feed cleanup override.
+                          {t("form.enterCleanMinutes")}
                         </FormDescription>
                         <FormMessage/>
                       </FormItem>

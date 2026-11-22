@@ -975,12 +975,20 @@ export function subscribeI18n(listener: () => void): () => void {
   return () => listeners.delete(listener);
 }
 
-export function t(key: string, params?: Record<string, string | number>): string {
-  const template = dictionaries[currentLanguage][key] ?? en[key] ?? key;
+function translateIn(language: Language, key: string, params?: Record<string, string | number>): string {
+  const template = dictionaries[language][key] ?? en[key] ?? key;
   if (!params) {
     return template;
   }
   return template.replace(/\{(\w+)\}/g, (_, name: string) => String(params[name] ?? `{${name}}`));
+}
+
+export function t(key: string, params?: Record<string, string | number>): string {
+  return translateIn(currentLanguage, key, params);
+}
+
+export function translateFor(language: Language, key: string, params?: Record<string, string | number>): string {
+  return translateIn(language, key, params);
 }
 
 document.documentElement.lang = currentLanguage;

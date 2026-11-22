@@ -2,6 +2,7 @@ import {Tooltip, TooltipContent, TooltipTrigger} from "@/shared/ui/kit/tooltip.t
 import {Button} from "@/shared/ui/kit/button.tsx";
 import {Trash} from "lucide-react";
 import useConfirmationStore from "@/shared/storage/confirmation-store.ts";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
 export type GroupDeleteProps = {
   uuid: string;
@@ -10,6 +11,7 @@ export type GroupDeleteProps = {
 
 export function GroupDelete(props: GroupDeleteProps) {
   const { openConfirmation } = useConfirmationStore();
+  const { t } = useI18n();
 
   const deleteGroupHandler = (uuid: string) => {
     props.deleteGroupHandler(uuid);
@@ -19,13 +21,13 @@ export function GroupDelete(props: GroupDeleteProps) {
       <>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button variant="outline" size="icon" aria-label="Submit"
+            <Button variant="outline" size="icon" aria-label={t("group.removeGroup")}
                     onClick={() => {
                       openConfirmation({
-                        title: "Delete group! Are you absolutely sure?",
-                        description: "This action cannot be undone. This will permanently delete group and remove data from our servers!",
-                        cancelLabel: "Cancel",
-                        actionLabel: "Delete",
+                        title: t("group.deleteTitle"),
+                        description: t("group.deleteDesc"),
+                        cancelLabel: t("common.cancel"),
+                        actionLabel: t("common.delete"),
                         onAction: () => {deleteGroupHandler(props.uuid) },
                         onCancel: () => { },
                       });
@@ -34,7 +36,7 @@ export function GroupDelete(props: GroupDeleteProps) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Remove group</p>
+            <p>{t("group.removeGroup")}</p>
           </TooltipContent>
         </Tooltip>
       </>

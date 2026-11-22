@@ -17,6 +17,7 @@ import {GroupModify} from "@/features/settings/group-modify.tsx";
 import {Button} from "@/shared/ui/kit/button.tsx";
 import useGroupModifyStore from "@/shared/storage/group-modify-store.ts";
 import {RssModify} from "@/features/settings/rss-modify.tsx";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
 export function UserConfigSettings() {
 
@@ -25,6 +26,7 @@ export function UserConfigSettings() {
   const updateUserId = userConfigStore((state) => state.updateUserId);
   const saveUserConfig = userConfigStore((state) => state.saveUserConfig.trigger);
   const { openGroupModify } = useGroupModifyStore();
+  const { t } = useI18n();
 
   const defaultUserId = appConfig?.appConfigPayload?.defaultUserId;
 
@@ -56,7 +58,7 @@ export function UserConfigSettings() {
   function deleteGroup(uuid: string | undefined) {
     if (!userConfig) return;
     if (userConfig.userConfigPayload.groups.length <= 1) {
-      toast.warning("You can't delete last group!", { position: "top-center" });
+      toast.warning(t("settings.groups.lastGroup"), { position: "top-center" });
       return;
     }
     void saveUserConfigWithGroups(
@@ -80,19 +82,19 @@ export function UserConfigSettings() {
         <div className="flex justify-center">
           <Card className="w-3/4">
             <CardHeader>
-              <CardTitle>User config - groups:</CardTitle>
+              <CardTitle>{t("settings.groups.title")}</CardTitle>
               <CardAction>
                 <Button variant="outline" onClick={() => {
                   openGroupModify({
-                    title: "Add Group",
-                    description: "Add Group",
-                    cancelLabel: "Cancel",
-                    actionLabel: "Add",
+                    title: t("settings.groups.addTitle"),
+                    description: t("settings.groups.addDesc"),
+                    cancelLabel: t("common.cancel"),
+                    actionLabel: t("common.add"),
                     onAction: (group: Group) => {addGroup(group) },
                     onCancel: () => { },
                     group: undefined
                   });
-                }}>Add group</Button>
+                }}>{t("settings.groups.addGroup")}</Button>
               </CardAction>
             </CardHeader>
             <CardContent>
