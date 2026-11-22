@@ -60,3 +60,5 @@ dist-ssr
 # AI
 .kilocode
 .codegraph
+.agent-work/
+.agentbridge/
