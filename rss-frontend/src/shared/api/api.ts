@@ -79,6 +79,16 @@ export const getUserSettings = (userId: number) => {
 export const saveUserSettings = (userId: number, settings: UserSettingsPayload) => {
   return apiRequest<UserSettingsPayload, UserSettingsPayload>(`/user-config/${userId}/settings`, "PUT", settings);
 }
+export const getUserSettingsById = (get: UserIdGetter) => async () => {
+  const userId = get().userId;
+  if (!userId) {return null}
+  return await apiRequest<UserSettingsPayload>(`/user-config/${userId}/settings`, "GET");
+}
+export const saveUserSettingsById = (get: UserIdGetter) => async (settings: UserSettingsPayload) => {
+  const userId = get().userId;
+  if (!userId) {return}
+  await apiRequest<UserSettingsPayload, UserSettingsPayload>(`/user-config/${userId}/settings`, "PUT", settings);
+}
 export const getRssListByUser = (get: UserIdGetter) => async () => {
   const userId = get().userId;
   if (!userId) {return []}

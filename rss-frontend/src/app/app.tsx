@@ -4,12 +4,14 @@ import {ThemeProvider} from "@/shared/ui/components/theme/theme-provider.tsx";
 import {useAppConfigStoreAsync} from "@/shared/storage/app-config-store.ts";
 import ConfirmationDialog from "@/shared/ui/components/alert/confirmation-dialog.tsx";
 import {Toaster} from "@/shared/ui/kit/sonner.tsx";
+import {SettingsBootstrap} from "@/app/settings-bootstrap.tsx";
 
 
 export function App() {
   useAppConfigStoreAsync((state) => state.appConfig);
   return (
       <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+        <SettingsBootstrap/>
         <div>
           <ConfirmationDialog />
           <Toaster />
