@@ -13,6 +13,7 @@ import pl.andriejsoft.rssreader.entity.AppConfigEntity;
 import pl.andriejsoft.rssreader.entity.UserConfigEntity;
 import pl.andriejsoft.rssreader.entity.model.Group;
 import pl.andriejsoft.rssreader.entity.model.UserConfigPayload;
+import pl.andriejsoft.rssreader.entity.model.UserSettingsPayload;
 import pl.andriejsoft.rssreader.mapper.UserConfigMapper;
 import pl.andriejsoft.rssreader.repository.UserConfigRepository;
 
@@ -42,6 +43,28 @@ public class UserConfigService {
 
   public void deleteConfigById(Long id) {
     userConfigRepository.deleteById(id);
+  }
+
+  public UserSettingsPayload findSettingsById(Long id) {
+    return userConfigRepository.findById(id)
+        .map(this::settingsFromEntity)
+        .orElse(null);
+  }
+
+  @CacheEvict(value = "config", allEntries = true)
+  public UserSettingsPayload saveSettings(Long id, UserSettingsPayload settings) {
+    return userConfigRepository.findById(id)
+        .map(entity -> {
+          UserConfigPayload payload = entity.getUserConfigPayload();
+          if (payload == null) {
+            payload = UserConfigPayload.builder().build();
+          }
+          payload.setSettings(settings == null ? UserSettingsPayload.builder().build() : settings);
+          entity.setUserConfigPayload(payload);
+          return userConfigRepository.save(entity);
+        })
+        .map(this::settingsFromEntity)
+        .orElse(null);
   }
 
   public List<UserDto> findUserAll() {
@@ -75,5 +98,16 @@ public class UserConfigService {
             .id(i.getId())
             .userName(i.getUserName())
             .build()).orElse(null);
+  }
+
+  private UserSettingsPayload settingsFromEntity(UserConfigEntity entity) {
+    UserConfigPayload payload = entity.getUserConfigPayload();
+    if (payload == null) {
+      return UserSettingsPayload.builder().build();
+    }
+    if (payload.getSettings() == null) {
+      payload.setSettings(UserSettingsPayload.builder().build());
+    }
+    return payload.getSettings();
   }
 }

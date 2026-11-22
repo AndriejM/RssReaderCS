@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.web.servlet.View;
 import pl.andriejsoft.rssreader.dto.UserConfigDto;
 import pl.andriejsoft.rssreader.entity.AppConfigEntity;
 import pl.andriejsoft.rssreader.entity.model.JobParams;
+import pl.andriejsoft.rssreader.entity.model.UserSettingsPayload;
 import pl.andriejsoft.rssreader.utils.LogHelper;
 
 @Service
@@ -34,6 +36,9 @@ public class DynamicScheduler {
 
   @Autowired
   private RssLoaderService rssLoaderService;
+
+  @Autowired
+  private ReadMarkerService readMarkerService;
 
   private final Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
   @Autowired
@@ -53,6 +58,13 @@ public class DynamicScheduler {
     cleanOldRssRecords(currentUserConfig.getId(),
         appConfig.getAppConfigPayload().getDaysForSetRead(),
         appConfig.getAppConfigPayload().getDaysForCleanRssItems());
+
+    int readTtlDays = Optional.ofNullable(currentUserConfig.getUserConfigPayload())
+        .map(payload -> payload.getSettings())
+        .map(UserSettingsPayload::getReadTtlDays)
+        .orElse(appConfig.getAppConfigPayload().getDaysForSetRead());
+    readMarkerService.purgeExpired(currentUserConfig.getId(), readTtlDays);
+    readMarkerService.trim(currentUserConfig.getId());
   }
 
   public void cleanOldRssRecords(Long currentUserId, Integer daysForSetRead, Integer daysForClean) {

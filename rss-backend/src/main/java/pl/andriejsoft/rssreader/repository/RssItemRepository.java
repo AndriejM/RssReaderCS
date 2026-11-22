@@ -18,6 +18,16 @@ public interface RssItemRepository extends CrudRepository<RssItem, Long> {
 
   Optional<RssItem> findByLink(String link);
 
+  Optional<RssItem> findByUserIdAndRssUuidAndSourceId(Long userId, String rssUuid, String sourceId);
+
+  Optional<RssItem> findByUserIdAndRssUuidAndLink(Long userId, String rssUuid, String link);
+
+  long countByUserIdAndRssUuid(Long userId, String rssUuid);
+
+  long countByUserId(Long userId);
+
+  long countByUserIdAndStatus(Long userId, RssItemStatus status);
+
   List<RssItemProjection> getByUserIdAndGroupUuidAndStatus(Long userId, String groupUuid,
       RssItemStatus status);
 
@@ -25,13 +35,11 @@ public interface RssItemRepository extends CrudRepository<RssItem, Long> {
 
   @Modifying
   @Transactional
-  @Query("update RssItem u set u.status = ?2 where u.userId = ?1 and u.pubDate < ?3 and u.status = 'NEW'")
-  void setStatusByUserIdAndStatusAndPubDate(Long userId, RssItemStatus status,
-      LocalDateTime pubDate);
+  @Query("update RssItem u set u.status = 'READ' where u.userId = ?1 and u.pubDate < ?2 and u.status = 'NEW'")
+  void setStatusByUserIdAndStatusAndPubDate(Long userId, LocalDateTime pubDate);
 
   @Modifying
   @Transactional
-  @Query("delete RssItem u where u.userId = ?1 and u.status = ?2 and u.pubDate < ?3")
-  void deleteByUserIdAndStatusAndPubDate(Long userId, RssItemStatus status,
-      LocalDateTime pubDate);
+  @Query("delete RssItem u where u.userId = ?1 and u.status = 'READ' and u.pubDate < ?2")
+  void deleteByUserIdAndStatusAndPubDate(Long userId, LocalDateTime pubDate);
 }

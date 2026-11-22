@@ -2,6 +2,7 @@ package pl.andriejsoft.rssreader.entity;
 
 import java.time.LocalDateTime;
 import pl.andriejsoft.rssreader.enums.RssItemStatus;
+import pl.andriejsoft.rssreader.enums.SourceIdType;
 
 public interface RssItemProjection {
 
@@ -20,4 +21,12 @@ public interface RssItemProjection {
   String getTitle();
 
   LocalDateTime getPubDate();
+
+  String getSourceId();
+
+  SourceIdType getSourceIdType();
+
+  String getFeedName();
+
+  LocalDateTime getFetchedAt();
 }

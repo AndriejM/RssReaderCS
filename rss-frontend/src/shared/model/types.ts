@@ -24,6 +24,33 @@ export interface UserConfig {
 export interface UserConfigPayload {
   defaultCronExpression: string
   groups: Group[]
+  settings?: UserSettingsPayload
+}
+
+export interface UserSettingsPayload {
+  theme: string
+  language: string
+  layout: string
+  readTtlDays: number
+  firstFeedDone: boolean
+  fontScales: FontScales
+  columnWidths: ColumnWidths
+  rowHeights: RowHeights
+}
+
+export interface FontScales {
+  feeds: number
+  headlines: number
+  content: number
+}
+
+export interface ColumnWidths {
+  feeds: number
+  headlines: number
+}
+
+export interface RowHeights {
+  headlines: number
 }
 
 export interface Group {
@@ -37,6 +64,19 @@ export interface RssConfig {
   name: string
   url: string
   refreshCronExpression: string
+  icon?: string
+  lastCheckedAt?: string
+  lastOkAt?: string
+  lastErrorAt?: string
+  lastErrorCode?: string
+  lastErrorParams?: string
+  lastErrorMessage?: string
+  fetchFailureCount?: number
+  nextRunAt?: string
+  nextRetryAt?: string
+  etag?: string
+  lastModified?: string
+  lastFetchedAt?: string
 }
 
 export interface RssItem {
@@ -48,7 +88,15 @@ export interface RssItem {
   link: string
   title: string
   pubDate: string
+  sourceId?: string
+  sourceIdType?: 'LINK' | 'GUID' | 'ATOM_ID' | 'JSON_ID'
+  feedName?: string
+  fetchedAt?: string
   itemPayload: RssItemPayload
+}
+
+export interface RssUnreadCount {
+  unread: number
 }
 
 export interface RssItemPayload {

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pl.andriejsoft.rssreader.dto.RssItemDto;
+import pl.andriejsoft.rssreader.dto.RssUnreadCountDto;
 import pl.andriejsoft.rssreader.service.RssService;
 
 @RequestMapping("/rss")
@@ -27,6 +28,11 @@ public class RssController {
     return rssService.getRssItemsForUserAndGroup(userId, groupUuid);
   }
 
+  @GetMapping("/unread-count/{userId}")
+  public RssUnreadCountDto getUnreadCount(@PathVariable Long userId) {
+    return rssService.getUnreadCount(userId);
+  }
+
   @GetMapping("/rss/{id}")
   public RssItemDto getRssById(@PathVariable Long id) {
     return rssService.getRssItemsById(id);
@@ -34,6 +40,6 @@ public class RssController {
 
   @PutMapping("/rss/{id}/set-status-read")
   public RssItemDto setRssStatusToRead(@PathVariable Long id) {
-    return rssService.getRssItemsById(id);
+    return rssService.setRssStatusToRead(id);
   }
 }

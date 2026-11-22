@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Value;
 import pl.andriejsoft.rssreader.entity.model.RssItemPayload;
 import pl.andriejsoft.rssreader.enums.RssItemStatus;
+import pl.andriejsoft.rssreader.enums.SourceIdType;
 
 @Value
 @Builder
@@ -25,6 +26,14 @@ public class RssItemDto {
   String title;
 
   LocalDateTime pubDate;
+
+  String sourceId;
+
+  SourceIdType sourceIdType;
+
+  String feedName;
+
+  LocalDateTime fetchedAt;
 
   RssItemPayload itemPayload;
 }

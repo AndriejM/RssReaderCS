@@ -1,5 +1,12 @@
 import axios, {type AxiosError, type AxiosResponse} from 'axios';
-import type {AppConfig, RssItem, User, UserConfig} from "@/shared/model/types.ts";
+import type {
+  AppConfig,
+  RssItem,
+  RssUnreadCount,
+  User,
+  UserConfig,
+  UserSettingsPayload,
+} from "@/shared/model/types.ts";
 
 // Create an instance of axios with some default configuration
 const apiClient = axios.create({
@@ -60,6 +67,12 @@ export const saveUserConfig = (userConfig: UserConfig) => {
 export const deleteUserConfig = (userId: number) => {
   return apiRequest<void, void>(`/user-config/delete/${userId}`, "DELETE");
 }
+export const getUserSettings = (userId: number) => {
+  return apiRequest<UserSettingsPayload>(`/user-config/${userId}/settings`, "GET");
+}
+export const saveUserSettings = (userId: number, settings: UserSettingsPayload) => {
+  return apiRequest<UserSettingsPayload, UserSettingsPayload>(`/user-config/${userId}/settings`, "PUT", settings);
+}
 export const getRssListByUser = (get: UserIdGetter) => async () => {
   const userId = get().userId;
   if (!userId) {return []}
@@ -68,9 +81,14 @@ export const getRssListByUser = (get: UserIdGetter) => async () => {
 export const getRssListByUserAndGroup = (userId: number, groupUuid: string) => {
   return apiRequest<RssItem[]>(`/rss/list/${userId}/${groupUuid}`, "GET");
 }
+export const getRssUnreadCount = (get: UserIdGetter) => async () => {
+  const userId = get().userId;
+  if (!userId) {return {unread: 0}}
+  return await apiRequest<RssUnreadCount>(`/rss/unread-count/${userId}`, "GET");
+}
 export const getRssById = (itemId: number) => {
   return apiRequest<RssItem>(`/rss/rss/${itemId}`, "GET");
 }
-export const setStatusRssRead = (itemId: number) => {
-  return apiRequest<void, number>(`/rss/rss/${itemId}`, "PUT");
+export const setStatusRssRead = async (itemId: number) => {
+  await apiRequest<RssItem, number>(`/rss/rss/${itemId}/set-status-read`, "PUT");
 }

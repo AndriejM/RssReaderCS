@@ -16,4 +16,6 @@ public class UserConfigPayload {
   private String defaultCronExpression;
   @Builder.Default
   private List<Group> groups = new ArrayList<>();
+  @Builder.Default
+  private UserSettingsPayload settings = new UserSettingsPayload();
 }

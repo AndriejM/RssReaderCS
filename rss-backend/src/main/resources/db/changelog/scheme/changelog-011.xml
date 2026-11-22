@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+		http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd"
+  logicalFilePath="db/changelog/scheme/changelog-011.xml">
+
+  <changeSet id="changeset-011-1" author="kilo">
+    <addColumn tableName="rss_item">
+      <column name="source_id" type="varchar2(1024)"/>
+      <column name="source_id_type" type="varchar2(16)"/>
+      <column name="feed_name" type="varchar2(255)"/>
+      <column name="fetched_at" type="timestamp"/>
+    </addColumn>
+  </changeSet>
+
+  <changeSet id="changeset-011-2" author="kilo">
+    <sql dbms="h2"
+      endDelimiter=";"
+      splitStatements="true"
+      stripComments="true">
+      UPDATE rss_item
+      SET source_id = COALESCE(link, 'id:' || id),
+          source_id_type = 'LINK'
+      WHERE source_id IS NULL;
+
+      UPDATE rss_item
+      SET rss_uuid = COALESCE(item_uuid, rss_uuid)
+      WHERE item_uuid IS NOT NULL;
+
+      UPDATE rss_item
+      SET item_uuid = source_id
+      WHERE source_id IS NOT NULL;
+
+      UPDATE rss_item
+      SET fetched_at = COALESCE(pub_date, CURRENT_TIMESTAMP)
+      WHERE fetched_at IS NULL;
+    </sql>
+  </changeSet>
+
+  <changeSet id="changeset-011-3" author="kilo">
+    <createIndex indexName="idx_rss_item_source" tableName="rss_item">
+      <column name="user_id" type="number(19,0)"/>
+      <column name="rss_uuid" type="char(36)"/>
+      <column name="source_id" type="varchar2(1024)"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="changeset-011-4" author="kilo">
+    <createIndex indexName="idx_rss_item_feed_status" tableName="rss_item">
+      <column name="user_id" type="number(19,0)"/>
+      <column name="rss_uuid" type="char(36)"/>
+      <column name="status" type="varchar2(10)"/>
+      <column name="pub_date" type="timestamp"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="changeset-011-5" author="kilo">
+    <createTable tableName="read_marker">
+      <column name="id" type="number(19,0)">
+        <constraints primaryKey="true" primaryKeyName="PK_ReadMarker"/>
+      </column>
+      <column name="user_id" type="number(19,0)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="rss_uuid" type="char(36)"/>
+      <column name="link" type="varchar2(1024)"/>
+      <column name="source_id" type="varchar2(1024)"/>
+      <column name="source_id_type" type="varchar2(16)"/>
+      <column name="pub_date" type="timestamp"/>
+      <column name="marked_at" type="timestamp">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+  </changeSet>
+
+  <changeSet id="changeset-011-6" author="kilo">
+    <createIndex indexName="idx_read_marker_source" tableName="read_marker">
+      <column name="user_id" type="number(19,0)"/>
+      <column name="source_id" type="varchar2(1024)"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="changeset-011-7" author="kilo">
+    <createIndex indexName="idx_read_marker_link" tableName="read_marker">
+      <column name="user_id" type="number(19,0)"/>
+      <column name="link" type="varchar2(1024)"/>
+    </createIndex>
+  </changeSet>
+
+  <changeSet id="changeset-011-8" author="kilo">
+    <createIndex indexName="idx_read_marker_marked_at" tableName="read_marker">
+      <column name="user_id" type="number(19,0)"/>
+      <column name="marked_at" type="timestamp"/>
+    </createIndex>
+  </changeSet>
+
+</databaseChangeLog>

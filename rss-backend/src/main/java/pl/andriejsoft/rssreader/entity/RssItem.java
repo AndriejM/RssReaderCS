@@ -20,6 +20,7 @@ import lombok.NoArgsConstructor;
 import pl.andriejsoft.rssreader.entity.converter.JpaRssItemConverter;
 import pl.andriejsoft.rssreader.entity.model.RssItemPayload;
 import pl.andriejsoft.rssreader.enums.RssItemStatus;
+import pl.andriejsoft.rssreader.enums.SourceIdType;
 
 @Data
 @NoArgsConstructor
@@ -60,6 +61,19 @@ public class RssItem {
 
   @Column(name = "title")
   private String title;
+
+  @Column(name = "source_id")
+  private String sourceId;
+
+  @Column(name = "source_id_type")
+  @Enumerated(EnumType.STRING)
+  private SourceIdType sourceIdType;
+
+  @Column(name = "feed_name")
+  private String feedName;
+
+  @Column(name = "fetched_at")
+  private LocalDateTime fetchedAt;
 
   @Convert(converter = JpaRssItemConverter.class)
   @Column(name = "item_payload", updatable = false)
