@@ -1096,7 +1096,7 @@ const es: Dictionary = {
   'appconfig.setReadLessThanClean': 'daysForSetRead debe ser menor que daysForCleanRssItems.',
 };
 
-const dictionaries: Record<Language, Dictionary> = {en, ru, uk, pl, de, fr, es};
+export const dictionaries: Record<Language, Dictionary> = {en, ru, uk, pl, de, fr, es};
 
 let currentLanguage: Language = detectLanguage();
 const listeners = new Set<() => void>();
