@@ -4,6 +4,7 @@ import parse from "html-react-parser";
 import DOMPurify from "dompurify";
 import {Button} from "@/shared/ui/kit/button.tsx";
 import {useRssContentStore, useRssContentStoreAsync} from "@/shared/storage/rss-content-store.ts";
+import {useI18n} from "@/shared/i18n/use-i18n.ts";
 import type {RssFullText, RssItem} from "@/shared/model/types.ts";
 
 export type RssContentProps = {
@@ -19,6 +20,7 @@ export type RssContentProps = {
 }
 
 export function RssContent(props: RssContentProps) {
+    const {t} = useI18n();
     const updateRssId = useRssContentStore((state) => state.updateRssId);
     const rss = useRssContentStoreAsync((state) => state.rss);
 
@@ -34,18 +36,18 @@ export function RssContent(props: RssContentProps) {
     );
 
     if (props.rssId === null) {
-        return <div>No RSS selected</div>;
+        return <div>{t("reader.noRss")}</div>;
     }
 
     return (
         <>
-            <ErrorBoundary fallback={<div>Error loading ...</div>}>
-                <Suspense fallback={<div>Loading...</div>}>
+            <ErrorBoundary fallback={<div>{t("reader.errorLoading")}</div>}>
+                <Suspense fallback={<div>{t("common.loading")}</div>}>
                     <div className="space-y-4">
                         <div className="flex flex-wrap gap-2">
                             {display && (
                                 <Button size="sm" variant="outline" onClick={() => props.onFullText(display)}>
-                                    Full text
+                                    {t("reader.fullText")}
                                 </Button>
                             )}
                             {display && (
@@ -54,12 +56,12 @@ export function RssContent(props: RssContentProps) {
                                     variant="outline"
                                     onClick={() => display.status === 'READ' ? props.onMarkUnread(display) : props.onMarkRead(display)}
                                 >
-                                    {display.status === 'READ' ? 'Mark unread' : 'Mark read'}
+                                    {display.status === 'READ' ? t("reader.markUnread") : t("reader.markRead")}
                                 </Button>
                             )}
                             {display && (
                                 <Button size="sm" variant="destructive" onClick={() => props.onDelete(display)}>
-                                    Delete
+                                    {t("common.delete")}
                                 </Button>
                             )}
                         </div>
@@ -67,16 +69,16 @@ export function RssContent(props: RssContentProps) {
                             {display?.link ? (
                                 <RssLink link={display.link}/>
                             ) : (
-                                <span>Link not available</span>
+                                <span>{t("reader.linkNotAvailable")}</span>
                             )}
                         </div>
-                        {props.fullTextLoading && <div>Loading full text...</div>}
+                        {props.fullTextLoading && <div>{t("reader.loadingFullText")}</div>}
                         {props.fullTextError && <div className="text-destructive">{props.fullTextError}</div>}
                         {props.fullText && (
                             <div className="space-y-2">
                                 <div className="whitespace-pre-wrap">{props.fullText.text}</div>
                                 {props.fullText.truncated && (
-                                    <p className="text-xs text-muted-foreground">Full text was truncated.</p>
+                                    <p className="text-xs text-muted-foreground">{t("reader.fullTextTruncated")}</p>
                                 )}
                             </div>
                         )}
@@ -84,7 +86,7 @@ export function RssContent(props: RssContentProps) {
                             {display ? (
                                 description
                             ) : (
-                                <span>No description available</span>
+                                <span>{t("reader.noDescription")}</span>
                             )}
                         </div>
                     </div>
