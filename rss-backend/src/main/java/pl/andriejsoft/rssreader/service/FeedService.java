@@ -61,13 +61,13 @@ public class FeedService {
       payload.setGroups(new ArrayList<>(List.of(Group.builder().name("DEFAULT").build())));
     }
 
-    List<String> existingLinks = payload.getGroups().stream()
+    List<String> existingLinks = new ArrayList<>(payload.getGroups().stream()
         .filter(group -> group.getRssConfigs() != null)
         .flatMap(group -> group.getRssConfigs().stream())
         .map(RssConfig::getUrl)
         .filter(StringUtils::hasText)
         .map(this::normalizeUrl)
-        .toList();
+        .toList());
 
     int added = 0;
     int skipped = 0;

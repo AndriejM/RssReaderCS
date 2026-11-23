@@ -149,7 +149,7 @@ public class RssLoaderService {
 
   private List<FeedEntry> parse(String decoded, String contentType) throws Exception {
     if (!StringUtils.hasText(decoded)) {
-      return List.of();
+      return new ArrayList<>();
     }
     String trimmed = decoded.trim();
     if (isJson(contentType, trimmed)) {
@@ -194,7 +194,7 @@ public class RssLoaderService {
     JsonNode root = objectMapper.readTree(decoded);
     JsonNode items = root.path("items");
     if (!items.isArray()) {
-      return List.of();
+      return new ArrayList<>();
     }
     List<FeedEntry> entries = new ArrayList<>();
     for (JsonNode item : items) {

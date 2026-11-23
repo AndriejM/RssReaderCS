@@ -258,3 +258,54 @@
 - `GET /rss/unread-count/{userId}` → `{unread: N}`.
 
 Этот endpoint должен быть дешёвым и не тянуть payload статей.
+
+---
+
+## 8. Оставшиеся задачи после текущей реализации (2026-11-23)
+
+### 8.1 Функциональные доделки
+
+- [ ] Per-feed cleanup по `cleanMinutes`: сейчас очистка идёт глобально по TTL и только для current user.
+- [ ] Scheduler/cleanup для всех пользователей, если нужен полноценный multi-user режим.
+- [ ] Multi-tab sync для `layout`, `font`, `columnWidths`, `rowHeights`; сейчас синхронизируются только theme/language.
+- [ ] Применить и дать редактировать `rowHeights` в reader UI.
+- [ ] Решить с `sound`, `soundFile`, `soundVolume`, `showMessage`: либо добавить UI в web settings, либо убрать из web-типов, если это зона `rss-chrome`.
+
+### 8.2 Проверки, которые уже проходят
+
+- `cd rss-frontend && npm run build`
+- `cd rss-frontend && npm run lint`
+- `cd rss-backend && mvn -q -DskipTests compile`
+
+### 8.3 Автотесты
+
+Backend и frontend автотесты написаны и проходят (2026-11-23).
+
+#### Backend — готово (138 tests)
+
+- [x] `RssLoaderServiceTest`: дедуп по `sourceId`/`link`, caps 250/2000, применение read-меток, conditional GET 304, cap `description`.
+- [x] `ReadMarkerServiceTest`: TTL, cap, `forget`.
+- [x] `FeedHealthServiceTest`: success/failure, exponential backoff, max backoff.
+- [x] `DynamicSchedulerTest`: per-feed `cleanMinutes`, purge read markers, feed locks.
+- [x] `FeedServiceTest`: export/import фидов.
+- [x] `RssControllerTest` / MockMvc: `set-status-read`, `unread-count`, refresh endpoints.
+
+#### Frontend — готово (32 tests)
+
+- [x] Добавить тестовый стек, если ещё не добавлен: Vitest + Testing Library + jsdom.
+- [x] `use-unread-badge`: polling, `document.title`, обработка ошибок.
+- [x] Reader: mark read / mark unread / undo delete.
+- [x] Reader: search, keyboard navigation, layout switching.
+- [x] Settings: save, export/import, forget read markers.
+- [x] i18n: полнота ключей, fallback, переключение языка.
+
+#### Chrome module
+
+- [ ] Unit tests для `rss-chrome`: нормализация настроек, badge text, нотификация только при увеличении unread, focus/create tab.
+- [ ] Использовать `node --test` с моками `chrome.*` или отдельный лёгкий test runner.
+
+#### Команды для проверки
+
+- Backend: `cd rss-backend && mvn test`
+- Frontend: `cd rss-frontend && npm run test`
+- Chrome module: `cd rss-chrome && node --test`
