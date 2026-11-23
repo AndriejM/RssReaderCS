@@ -95,7 +95,7 @@ export function FeedsSettings() {
     }
 
     return (
-        <div className="flex justify-center pt-5">
+        <div className="flex justify-center pt-5" data-testid="feeds-settings">
             <Card className="w-3/4">
                 <CardHeader>
                     <CardTitle>{t("settings.feeds.title")}</CardTitle>
