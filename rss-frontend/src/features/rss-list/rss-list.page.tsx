@@ -16,10 +16,10 @@ import {
 import {RssContent} from "@/features/rss-list/rss-content.tsx";
 import {cn} from "@/shared/lib/css";
 import {useDragWidth} from "@/shared/lib/use-column-resize.ts";
+import {useUnreadBadge} from "@/shared/lib/use-unread-badge.ts";
 import {
     deleteRssItem,
     getRssFullText,
-    getRssUnreadCount,
     markRssRead,
     markRssUnread,
     refreshAllFeeds,
@@ -93,6 +93,7 @@ function RssListPage() {
     const lastDeleted = useRef<number | null>(null);
 
     const userId = appConfig?.appConfigPayload?.defaultUserId ?? null;
+    const refreshUnread = useUnreadBadge(userId);
 
     useEffect(() => {
         if (appConfig?.appConfigPayload) {
@@ -180,11 +181,12 @@ function RssListPage() {
             try {
                 await setStatusRssRead(item.id);
                 invalidate();
+                void refreshUnread();
             } catch {
                 toast.error(t("reader.markReadError"));
             }
         }
-    }, [appConfig, invalidate, t]);
+    }, [appConfig, invalidate, refreshUnread, t]);
 
     const move = useCallback((delta: number) => {
         if (filtered.length === 0) {
@@ -207,10 +209,11 @@ function RssListPage() {
         try {
             await markRssRead(item.id);
             invalidate();
+            void refreshUnread();
         } catch {
             toast.error(t("reader.markReadError"));
         }
-    }, [invalidate, t]);
+    }, [invalidate, refreshUnread, t]);
 
     const markUnread = useCallback(async (item: RssItem) => {
         if (item.id === null) {
@@ -219,10 +222,11 @@ function RssListPage() {
         try {
             await markRssUnread(item.id);
             invalidate();
+            void refreshUnread();
         } catch {
             toast.error(t("reader.markUnreadError"));
         }
-    }, [invalidate, t]);
+    }, [invalidate, refreshUnread, t]);
 
     const deleteItem = useCallback(async (item: RssItem) => {
         const itemId = item.id;
@@ -236,6 +240,7 @@ function RssListPage() {
                 setRssId(null);
             }
             invalidate();
+            void refreshUnread();
             toast(t("reader.deleted"), {
                 action: {
                     label: t("reader.undo"),
@@ -244,6 +249,7 @@ function RssListPage() {
                             await restoreRssItem(itemId);
                             lastDeleted.current = null;
                             invalidate();
+                            void refreshUnread();
                             setRssId(itemId);
                         } catch {
                             toast.error(t("reader.restoreError"));
@@ -254,7 +260,7 @@ function RssListPage() {
         } catch {
             toast.error(t("reader.deleteError"));
         }
-    }, [invalidate, rssId, t]);
+    }, [invalidate, refreshUnread, rssId, t]);
 
     const undoDelete = useCallback(async () => {
         const itemId = lastDeleted.current;
@@ -265,11 +271,12 @@ function RssListPage() {
             await restoreRssItem(itemId);
             lastDeleted.current = null;
             invalidate();
+            void refreshUnread();
             setRssId(itemId);
         } catch {
             toast.error(t("reader.restoreError"));
         }
-    }, [invalidate, t]);
+    }, [invalidate, refreshUnread, t]);
 
     const loadFullText = useCallback(async (item: RssItem) => {
         if (item.id === null) {
@@ -312,12 +319,13 @@ function RssListPage() {
                 toast.success(t("reader.refreshSummary", {added}));
             }
             invalidate();
+            void refreshUnread();
         } catch {
             toast.error(t("reader.refreshError"));
         } finally {
             setRefreshingAll(false);
         }
-    }, [invalidate, userId, t]);
+    }, [invalidate, refreshUnread, userId, t]);
 
     const changeLayout = useCallback((next: Layout) => {
         if (!settings) {
@@ -407,29 +415,6 @@ function RssListPage() {
         window.addEventListener('keydown', handler);
         return () => window.removeEventListener('keydown', handler);
     }, [deleteItem, loadFullText, markRead, markUnread, move, openOriginal, refreshAll, search, selected, shortcutsOpen, undoDelete]);
-
-    useEffect(() => {
-        if (!userId) {
-            return;
-        }
-        let active = true;
-        const tick = async () => {
-            try {
-                const {unread} = await getRssUnreadCount(() => ({userId}))();
-                if (active) {
-                    document.title = unread > 99 ? "(99+) RssReader" : unread > 0 ? `(${unread}) RssReader` : "RssReader";
-                }
-            } catch {
-                // ignore polling errors
-            }
-        };
-        void tick();
-        const timer = window.setInterval(() => void tick(), 60_000);
-        return () => {
-            active = false;
-            window.clearInterval(timer);
-        };
-    }, [userId]);
 
     const showFeeds = layout === "three";
     const showContent = layout !== "list";
