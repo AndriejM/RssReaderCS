@@ -420,7 +420,7 @@ function RssListPage() {
     const showContent = layout !== "list";
 
     return (
-        <div className="flex h-screen" data-layout={layout}>
+        <div className="flex h-screen" data-layout={layout} data-testid="reader-root">
             {showFeeds && (
                 <>
                     <aside
