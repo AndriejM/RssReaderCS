@@ -235,8 +235,8 @@
 - `chrome.alarms` → Spring `DynamicScheduler`.
 - `chrome.storage.local` → БД + Zustand/localStorage-кэш.
 - offscreen document → обычный backend-fetch.
-- `chrome.action` badge → отдельный Chrome-модуль; в веб-версии опционально `document.title`.
-- `chrome.notifications` → отдельный Chrome-модуль, не веб-frontend.
+- `chrome.action` badge → отдельный Chrome-модуль `rss-chrome`; в веб-версии опционально `document.title`.
+- `chrome.notifications` → отдельный Chrome-модуль `rss-chrome`, не веб-frontend.
 - `chrome.tabs` focusOrCreate → BroadcastChannel / `window.focus`.
 - `chrome.runtime` messages → REST + (опц.) SSE/WebSocket для push-обновлений счётчиков.
 
@@ -247,7 +247,7 @@
    хранить в БД на пользователя. Допустимо хранить внутри `user_config.user_config_payload` как
    `settings`, чтобы не плодить отдельную таблицу без необходимости.
 3. **Live-счётчики**: polling. SSE/WebSocket не нужен.
-4. **Звук/нотификации в веб-версии**: не нужны. Для этого будет отдельный маленький Chrome-модуль/плагин:
+4. **Звук/нотификации в веб-версии**: не нужны. Для этого будет отдельный маленький Chrome-модуль `rss-chrome`:
    - периодически опрашивает backend о количестве непрочитанных новостей;
    - показывает количество в иконке;
    - воспроизводит звук и/или выдаёт нотификацию при появлении непрочитанных;
