@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RssReader Companion</title>
+  <link rel="stylesheet" href="options.css" />
+  <script type="module" src="options.js"></script>
+</head>
+<body>
+  <main class="page">
+    <header class="header">
+      <h1>RssReader Companion</h1>
+      <p class="hint">Polls the backend unread count, updates the toolbar badge, plays a sound, and opens the frontend on click.</p>
+    </header>
+
+    <section class="card">
+      <h2>Connection</h2>
+      <div class="grid">
+        <label>
+          Backend URL
+          <input id="backendUrl" type="url" autocomplete="off" spellcheck="false" />
+        </label>
+        <label>
+          Frontend URL
+          <input id="frontendUrl" type="url" autocomplete="off" spellcheck="false" />
+        </label>
+        <label>
+          User
+          <select id="userId"></select>
+        </label>
+        <label>
+          Poll interval, minutes
+          <input id="pollMinutes" type="number" min="1" max="60" step="1" />
+        </label>
+      </div>
+      <div class="buttons">
+        <button id="save" class="primary" type="button">Save</button>
+        <button id="check" type="button">Check now</button>
+        <button id="open" type="button">Open frontend</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Alerts</h2>
+      <div class="grid">
+        <label class="checkbox">
+          <input id="soundEnabled" type="checkbox" />
+          <span>Sound</span>
+        </label>
+        <label>
+          Sound file
+          <select id="soundFile"></select>
+        </label>
+        <label>
+          Volume
+          <div class="volume">
+            <input id="soundVolume" type="range" min="0" max="100" step="5" />
+            <output id="soundVolumeValue" for="soundVolume"></output>
+          </div>
+        </label>
+        <label class="checkbox">
+          <input id="notificationsEnabled" type="checkbox" />
+          <span>Notifications</span>
+        </label>
+      </div>
+      <div class="buttons">
+        <button id="testSound" type="button">Test sound</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Status</h2>
+      <dl class="status-grid">
+        <dt>Last check</dt>
+        <dd id="lastCheckedAt">—</dd>
+        <dt>Unread</dt>
+        <dd id="lastUnread">—</dd>
+        <dt>Error</dt>
+        <dd id="lastError">—</dd>
+      </dl>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+    </section>
+  </main>
+</body>
+</html>
