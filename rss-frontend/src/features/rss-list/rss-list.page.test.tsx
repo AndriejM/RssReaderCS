@@ -271,6 +271,30 @@ describe("reader page", () => {
     );
   });
 
+  it("shows all feeds in list and split layouts after selecting a feed in three-panel", async () => {
+    renderPage();
+
+    fireEvent.click(await screen.findByText("Feed One"));
+    await waitFor(() => expect(screen.queryByText("Beta story")).not.toBeInTheDocument());
+
+    currentSettings.layout = "list";
+    fireEvent.click(screen.getByRole("button", { name: "List" }));
+    await waitFor(() => expect(saveUserSettingsInner).toHaveBeenCalled());
+
+    expect(await screen.findByTestId("reader-root")).toHaveAttribute("data-layout", "list");
+    expect(screen.getByText("Alpha news")).toBeInTheDocument();
+    expect(screen.getByText("Beta story")).toBeInTheDocument();
+
+    currentSettings.layout = "split";
+    await new Promise((r) => setTimeout(r, 700));
+    fireEvent.click(screen.getByRole("button", { name: "Split" }));
+    await waitFor(() => expect(saveUserSettingsInner).toHaveBeenCalledTimes(2));
+
+    expect(await screen.findByTestId("reader-root")).toHaveAttribute("data-layout", "split");
+    expect(screen.getByText("Alpha news")).toBeInTheDocument();
+    expect(screen.getByText("Beta story")).toBeInTheDocument();
+  });
+
   it("switches layout and hides panels accordingly", async () => {
     renderPage();
     await screen.findByText("Beta story");

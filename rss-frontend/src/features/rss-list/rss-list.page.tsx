@@ -16,6 +16,7 @@ import {
     DialogTitle,
 } from "@/shared/ui/kit/dialog.tsx";
 import {RssContent} from "@/features/rss-list/rss-content.tsx";
+import {FeedIcon} from "@/shared/ui/components/feed/feed-icon.tsx";
 import {resolveLayout} from "@/shared/model/layout.ts";
 import {cn} from "@/shared/lib/css";
 import {useDragWidth} from "@/shared/lib/use-column-resize.ts";
@@ -188,13 +189,23 @@ function RssListPage() {
         }));
     }, [userConfig, rssList]);
 
+    const feedById = useMemo(() => {
+        const map = new Map<string, { icon?: string; name: string }>();
+        for (const feed of feeds) {
+            map.set(feed.uuid, {icon: feed.icon, name: feed.name});
+        }
+        return map;
+    }, [feeds]);
+
+    const visibleFeed = layout === "three" ? selectedFeed : ALL_FEEDS;
+
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();
         return rssList
-            .filter((item) => selectedFeed === ALL_FEEDS || item.rssUuid === selectedFeed)
+            .filter((item) => visibleFeed === ALL_FEEDS || item.rssUuid === visibleFeed)
             .filter((item) => !query || matchesSearch(item, query))
             .sort((a, b) => freshness(b) - freshness(a));
-    }, [rssList, search, selectedFeed]);
+    }, [rssList, search, visibleFeed]);
 
     const activeId = useMemo(() => {
         if (rssId !== null && filtered.some((item) => item.id === rssId)) {
@@ -497,7 +508,7 @@ function RssListPage() {
                                 )}
                             >
                                 <span className="flex items-center gap-2 truncate">
-                                    {feed.icon && <img src={feed.icon} alt="" className="h-4 w-4"/>}
+                                    <FeedIcon src={feed.icon} name={feed.name}/>
                                     <span className="truncate">{feed.name}</span>
                                 </span>
                                 <span className="text-xs text-muted-foreground">{feed.unread}</span>
@@ -561,15 +572,22 @@ function RssListPage() {
                             onClick={() => void select(item)}
                             style={{minHeight: rowHeights.headlines}}
                             className={cn(
-                                "block w-full border-b px-3 py-2 text-left hover:bg-accent",
+                                "flex w-full gap-2 border-b px-3 py-2 text-left hover:bg-accent",
                                 item.id === activeId && "bg-accent",
                                 item.status === 'READ' ? "text-muted-foreground" : "font-medium"
                             )}
                         >
-                            <div className="line-clamp-2">{item.title}</div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                                {item.feedName ?? t("reader.unknownFeed")} · {formatDate(item.pubDate)}
-                            </div>
+                            <FeedIcon
+                                src={feedById.get(item.rssUuid)?.icon}
+                                name={item.feedName ?? feedById.get(item.rssUuid)?.name}
+                                className="mt-0.5"
+                            />
+                            <span className="min-w-0 grow">
+                                <span className="line-clamp-2">{item.title}</span>
+                                <span className="mt-1 block text-xs text-muted-foreground">
+                                    {item.feedName ?? t("reader.unknownFeed")} · {formatDate(item.pubDate)}
+                                </span>
+                            </span>
                         </button>
                     ))}
                 </div>
