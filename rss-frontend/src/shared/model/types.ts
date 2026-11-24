@@ -36,10 +36,6 @@ export interface UserSettingsPayload {
   fontScales: FontScales
   columnWidths: ColumnWidths
   rowHeights: RowHeights
-  sound?: boolean
-  soundFile?: string
-  soundVolume?: number
-  showMessage?: boolean
 }
 
 export interface FontScales {

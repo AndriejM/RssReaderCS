@@ -106,6 +106,7 @@ function RssListPage() {
         : "three";
     const fontScales = settings?.fontScales ?? {feeds: 100, headlines: 100, content: 100};
     const columnWidths = settings?.columnWidths ?? {feeds: 220, headlines: 420};
+    const rowHeights = settings?.rowHeights ?? {headlines: 72};
 
     const [widths, setWidths] = useState<{ feeds: number; headlines: number } | null>(null);
     if (widths === null && settings) {
@@ -514,6 +515,7 @@ function RssListPage() {
                             aria-selected={item.id === activeId}
                             aria-current={item.id === activeId ? "true" : undefined}
                             onClick={() => void select(item)}
+                            style={{minHeight: rowHeights.headlines}}
                             className={cn(
                                 "block w-full border-b px-3 py-2 text-left hover:bg-accent",
                                 item.id === activeId && "bg-accent",

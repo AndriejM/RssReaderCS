@@ -159,6 +159,20 @@ export function UserSettings() {
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="rowHeadlines">{t("settings.row.headlines")}</Label>
+                <Input
+                    id="rowHeadlines"
+                    type="number"
+                    min={40}
+                    max={240}
+                    value={draft.rowHeights.headlines}
+                    onChange={(event) => patch({
+                      rowHeights: {...draft.rowHeights, headlines: clampInt(event.target.value, 40, 240, 72)},
+                    })}
+                />
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="fontFeeds">{t("settings.font.feeds")}</Label>
                 <Input
                     id="fontFeeds"
