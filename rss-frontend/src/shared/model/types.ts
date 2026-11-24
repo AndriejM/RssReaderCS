@@ -50,6 +50,7 @@ export interface ColumnWidths {
 
 export interface RowHeights {
   headlines: number
+  content: number
 }
 
 export interface Group {

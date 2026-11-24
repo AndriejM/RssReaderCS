@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Component as RssListPage } from "@/features/rss-list/rss-list.page.tsx";
 import { LayoutSwitcher } from "@/shared/ui/components/layout/layout-switcher.tsx";
@@ -23,7 +23,7 @@ const { toastMock, currentSettings, saveUserSettingsInner } = vi.hoisted(() => (
     firstFeedDone: true,
     fontScales: { feeds: 100, headlines: 100, content: 100 },
     columnWidths: { feeds: 220, headlines: 420 },
-    rowHeights: { headlines: 0 },
+    rowHeights: { headlines: 0, content: 320 },
   },
   saveUserSettingsInner: vi.fn(async () => undefined),
 }));
@@ -271,19 +271,22 @@ describe("reader page", () => {
     );
   });
 
-  it("shows all feeds in list and split layouts after selecting a feed in three-panel", async () => {
+  it("keeps the selected feed filter in three and outlook layouts", async () => {
     renderPage();
 
     fireEvent.click(await screen.findByText("Feed One"));
     await waitFor(() => expect(screen.queryByText("Beta story")).not.toBeInTheDocument());
 
-    currentSettings.layout = "list";
-    fireEvent.click(screen.getByRole("button", { name: "List" }));
+    currentSettings.layout = "outlook";
+    fireEvent.click(screen.getByRole("button", { name: "Outlook" }));
     await waitFor(() => expect(saveUserSettingsInner).toHaveBeenCalled());
 
-    expect(await screen.findByTestId("reader-root")).toHaveAttribute("data-layout", "list");
+    expect(await screen.findByTestId("reader-root")).toHaveAttribute("data-layout", "outlook");
     expect(screen.getByText("Alpha news")).toBeInTheDocument();
-    expect(screen.getByText("Beta story")).toBeInTheDocument();
+    expect(screen.queryByText("Beta story")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("option", { name: /All feeds/ }));
+    expect(await screen.findByText("Beta story")).toBeInTheDocument();
 
     currentSettings.layout = "split";
     await new Promise((r) => setTimeout(r, 700));
@@ -295,17 +298,31 @@ describe("reader page", () => {
     expect(screen.getByText("Beta story")).toBeInTheDocument();
   });
 
+  it("filters headlines when selecting a feed in outlook layout", async () => {
+    currentSettings.layout = "outlook";
+    useSettingsStore.getState().getUserSettings.setValue({ ...currentSettings });
+    renderPage();
+
+    await screen.findByText("Beta story");
+    fireEvent.click(within(screen.getByRole("listbox", { name: "Feeds" })).getByRole("option", { name: /Feed Two/ }));
+
+    await waitFor(() => expect(screen.queryByText("Alpha news")).not.toBeInTheDocument());
+    expect(screen.getByText("Beta story")).toBeInTheDocument();
+    expect(screen.getByText("Gamma old")).toBeInTheDocument();
+  });
+
   it("switches layout and hides panels accordingly", async () => {
     renderPage();
     await screen.findByText("Beta story");
 
-    currentSettings.layout = "list";
-    fireEvent.click(screen.getByRole("button", { name: "List" }));
+    currentSettings.layout = "outlook";
+    fireEvent.click(screen.getByRole("button", { name: "Outlook" }));
 
     await waitFor(() => expect(saveUserSettingsInner).toHaveBeenCalled());
-    expect(await screen.findByTestId("reader-root")).toHaveAttribute("data-layout", "list");
-    expect(screen.queryByRole("listbox", { name: "Feeds" })).not.toBeInTheDocument();
-    expect(screen.queryByText("alpha body")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("reader-root")).toHaveAttribute("data-layout", "outlook");
+    expect(screen.getByRole("listbox", { name: "Feeds" })).toBeInTheDocument();
+    expect(await screen.findByText("beta body")).toBeInTheDocument();
+    expect(document.querySelector('[role="separator"][aria-orientation="horizontal"]')).toBeInTheDocument();
 
     currentSettings.layout = "split";
     await new Promise((r) => setTimeout(r, 700));

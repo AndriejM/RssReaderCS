@@ -16,10 +16,10 @@ import {useSettingsStore, useSettingsStoreAsync} from "@/shared/storage/settings
 import {useTheme, type Theme} from "@/shared/ui/components/theme/theme-context.ts";
 import {useI18n} from "@/shared/i18n/use-i18n.ts";
 import {LANGUAGES, setLanguage, type Language} from "@/shared/i18n/i18n.ts";
+import {LAYOUTS} from "@/shared/model/layout.ts";
 import type {UserSettingsPayload} from "@/shared/model/types.ts";
 
 const THEMES = ["light", "dark", "system"] as const;
-const LAYOUTS = ["three", "list", "split"] as const;
 
 function clampInt(value: string, min: number, max: number, fallback: number) {
   const parsed = Number(value);
@@ -170,6 +170,20 @@ export function UserSettings() {
                     value={draft.rowHeights.headlines}
                     onChange={(event) => patch({
                       rowHeights: {...draft.rowHeights, headlines: clampInt(event.target.value, 40, 240, 72)},
+                    })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="rowContent">{t("settings.row.content")}</Label>
+                <Input
+                    id="rowContent"
+                    type="number"
+                    min={120}
+                    max={1200}
+                    value={draft.rowHeights.content}
+                    onChange={(event) => patch({
+                      rowHeights: {...draft.rowHeights, content: clampInt(event.target.value, 120, 1200, 320)},
                     })}
                 />
               </div>

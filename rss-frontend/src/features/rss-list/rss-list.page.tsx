@@ -19,7 +19,7 @@ import {RssContent} from "@/features/rss-list/rss-content.tsx";
 import {FeedIcon} from "@/shared/ui/components/feed/feed-icon.tsx";
 import {resolveLayout} from "@/shared/model/layout.ts";
 import {cn} from "@/shared/lib/css";
-import {useDragWidth} from "@/shared/lib/use-column-resize.ts";
+import {useDragHeight, useDragWidth} from "@/shared/lib/use-column-resize.ts";
 import {useUnreadBadge} from "@/shared/lib/use-unread-badge.ts";
 import {
     deleteRssItem,
@@ -144,13 +144,20 @@ function RssListPage() {
     const layout = resolveLayout(settings?.layout);
     const fontScales = settings?.fontScales ?? {feeds: 100, headlines: 100, content: 100};
     const columnWidths = settings?.columnWidths ?? {feeds: 220, headlines: 420};
-    const rowHeights = settings?.rowHeights ?? {headlines: 72};
+    const rowHeights = settings?.rowHeights ?? {headlines: 72, content: 320};
 
-    const [widths, setWidths] = useState<{ feeds: number; headlines: number } | null>(null);
+    const [widths, setWidths] = useState<{ feeds: number; headlines: number; content: number } | null>(null);
     if (widths === null && settings) {
-        setWidths({feeds: settings.columnWidths.feeds, headlines: settings.columnWidths.headlines});
+        setWidths({
+            feeds: settings.columnWidths.feeds,
+            headlines: settings.columnWidths.headlines,
+            content: settings.rowHeights.content,
+        });
     }
-    const effectiveWidths = widths ?? columnWidths;
+    const effectiveWidths = useMemo(
+        () => widths ?? {feeds: columnWidths.feeds, headlines: columnWidths.headlines, content: rowHeights.content},
+        [widths, columnWidths.feeds, columnWidths.headlines, rowHeights.content]
+    );
     const widthsRef = useRef(effectiveWidths);
     useEffect(() => {
         widthsRef.current = effectiveWidths;
@@ -161,18 +168,29 @@ function RssListPage() {
             return;
         }
         const merged = {...widthsRef.current, ...patch};
-        void saveSettings({...settings, columnWidths: {...settings.columnWidths, ...merged}});
+        void saveSettings({...settings, columnWidths: {...settings.columnWidths, feeds: merged.feeds, headlines: merged.headlines}});
+    }, [saveSettings, settings]);
+
+    const persistContentHeight = useCallback((content: number) => {
+        if (!settings) {
+            return;
+        }
+        void saveSettings({...settings, rowHeights: {...settings.rowHeights, content}});
     }, [saveSettings, settings]);
 
     const getFeedsWidth = useCallback(() => widthsRef.current.feeds, []);
     const getHeadlinesWidth = useCallback(() => widthsRef.current.headlines, []);
+    const getContentHeight = useCallback(() => widthsRef.current.content, []);
     const setFeedsWidth = useCallback((value: number) => setWidths((prev) => ({...(prev ?? widthsRef.current), feeds: value})), []);
     const setHeadlinesWidth = useCallback((value: number) => setWidths((prev) => ({...(prev ?? widthsRef.current), headlines: value})), []);
+    const setContentHeight = useCallback((value: number) => setWidths((prev) => ({...(prev ?? widthsRef.current), content: value})), []);
     const commitFeedsWidth = useCallback((value: number) => persistWidths({feeds: value}), [persistWidths]);
     const commitHeadlinesWidth = useCallback((value: number) => persistWidths({headlines: value}), [persistWidths]);
+    const commitContentHeight = useCallback((value: number) => persistContentHeight(value), [persistContentHeight]);
 
     const onFeedsResize = useDragWidth(getFeedsWidth, 160, setFeedsWidth, commitFeedsWidth);
     const onHeadlinesResize = useDragWidth(getHeadlinesWidth, 240, setHeadlinesWidth, commitHeadlinesWidth);
+    const onContentResize = useDragHeight(getContentHeight, 120, setContentHeight, commitContentHeight);
 
     const invalidate = useCallback(() => {
         useRssListAllStore.getState().getRssList.markStale();
@@ -197,7 +215,9 @@ function RssListPage() {
         return map;
     }, [feeds]);
 
-    const visibleFeed = layout === "three" ? selectedFeed : ALL_FEEDS;
+    const isOutlook = layout === "outlook";
+    const showFeeds = layout === "three" || isOutlook;
+    const visibleFeed = showFeeds ? selectedFeed : ALL_FEEDS;
 
     const filtered = useMemo(() => {
         const query = search.trim().toLowerCase();
@@ -469,8 +489,113 @@ function RssListPage() {
         return () => window.removeEventListener('keydown', handler);
     }, [deleteItem, loadFullText, markRead, markUnread, move, openOriginal, refreshAll, search, selected, shortcutsOpen, undoDelete]);
 
-    const showFeeds = layout === "three";
-    const showContent = layout !== "list";
+    const headlinesPane = (
+        <aside
+            className="flex shrink-0 flex-col border-r"
+            style={isOutlook
+                ? {height: effectiveWidths.content, flexBasis: effectiveWidths.content, fontSize: `${fontScales.headlines}%`}
+                : {width: effectiveWidths.headlines, fontSize: `${fontScales.headlines}%`}}
+        >
+            <div className="flex gap-2 border-b p-2">
+                <Input
+                    ref={searchRef}
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    placeholder={t("reader.search")}
+                />
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button
+                            size="icon-sm"
+                            variant="outline"
+                            aria-label={refreshingAll ? t("reader.refreshing") : t("reader.refresh")}
+                            onClick={() => void refreshAll()}
+                            disabled={refreshingAll}
+                        >
+                            <RefreshCw className={cn(refreshingAll && "animate-spin")}/>
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{refreshingAll ? t("reader.refreshing") : t("reader.refresh")}</p>
+                    </TooltipContent>
+                </Tooltip>
+                <Button size="sm" variant="outline" onClick={() => setShortcutsOpen(true)} aria-label={t("reader.shortcuts")}>
+                    ?
+                </Button>
+            </div>
+            <div className="flex items-center gap-1 border-b px-2 py-1">
+                <span className="ml-auto text-xs text-muted-foreground" aria-live="polite">
+                    {filtered.length} {t("reader.shown")} / {totalUnread} {t("reader.unread")}
+                </span>
+            </div>
+            <div className="grow overflow-y-auto" role="listbox" aria-label={t("reader.headlines")}>
+                {filtered.map((item) => (
+                    <button
+                        key={item.id ?? item.link}
+                        type="button"
+                        role="option"
+                        aria-selected={item.id === activeId}
+                        aria-current={item.id === activeId ? "true" : undefined}
+                        onClick={() => void select(item)}
+                        style={{minHeight: rowHeights.headlines}}
+                        className={cn(
+                            "flex w-full gap-2 border-b px-3 py-2 text-left hover:bg-accent",
+                            item.id === activeId && "bg-accent",
+                            item.status === 'READ' ? "text-muted-foreground" : "font-medium"
+                        )}
+                    >
+                        <FeedIcon
+                            src={feedById.get(item.rssUuid)?.icon}
+                            name={item.feedName ?? feedById.get(item.rssUuid)?.name}
+                            className="mt-0.5"
+                        />
+                        <span className="min-w-0 grow">
+                            <span className="line-clamp-2">{item.title}</span>
+                            <span className="mt-1 block text-xs text-muted-foreground">
+                                {item.feedName ?? t("reader.unknownFeed")} · {formatDate(item.pubDate)}
+                            </span>
+                        </span>
+                    </button>
+                ))}
+            </div>
+        </aside>
+    );
+
+    const contentPane = (
+        <main className="grow overflow-y-auto p-4" style={{fontSize: `${fontScales.content}%`}}>
+            <RssContent
+                rssId={activeId}
+                item={selected}
+                fullText={fullText}
+                fullTextLoading={fullTextLoading}
+                fullTextError={fullTextError}
+                onFullText={loadFullText}
+                onMarkRead={markRead}
+                onMarkUnread={markUnread}
+                onDelete={deleteItem}
+            />
+        </main>
+    );
+
+    const headlinesSeparator = (
+        <div
+            onPointerDown={onHeadlinesResize}
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={t("reader.headlines")}
+            className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40"
+        />
+    );
+
+    const contentSeparator = (
+        <div
+            onPointerDown={onContentResize}
+            role="separator"
+            aria-orientation="horizontal"
+            aria-label={t("reader.headlines")}
+            className="h-1 shrink-0 cursor-row-resize bg-border hover:bg-primary/40"
+        />
+    );
 
     return (
         <div className="flex h-screen" data-layout={layout} data-testid="reader-root">
@@ -525,97 +650,18 @@ function RssListPage() {
                 </>
             )}
 
-            <aside
-                className="flex shrink-0 flex-col border-r"
-                style={{width: layout === "list" ? "100%" : effectiveWidths.headlines, fontSize: `${fontScales.headlines}%`}}
-            >
-                <div className="flex gap-2 border-b p-2">
-                    <Input
-                        ref={searchRef}
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder={t("reader.search")}
-                    />
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button
-                                size="icon-sm"
-                                variant="outline"
-                                aria-label={refreshingAll ? t("reader.refreshing") : t("reader.refresh")}
-                                onClick={() => void refreshAll()}
-                                disabled={refreshingAll}
-                            >
-                                <RefreshCw className={cn(refreshingAll && "animate-spin")}/>
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{refreshingAll ? t("reader.refreshing") : t("reader.refresh")}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                    <Button size="sm" variant="outline" onClick={() => setShortcutsOpen(true)} aria-label={t("reader.shortcuts")}>
-                        ?
-                    </Button>
+            {isOutlook ? (
+                <div className="flex min-w-0 grow flex-col">
+                    {headlinesPane}
+                    {contentSeparator}
+                    {contentPane}
                 </div>
-                <div className="flex items-center gap-1 border-b px-2 py-1">
-                    <span className="ml-auto text-xs text-muted-foreground" aria-live="polite">
-                        {filtered.length} {t("reader.shown")} / {totalUnread} {t("reader.unread")}
-                    </span>
-                </div>
-                <div className="grow overflow-y-auto" role="listbox" aria-label={t("reader.headlines")}>
-                    {filtered.map((item) => (
-                        <button
-                            key={item.id ?? item.link}
-                            type="button"
-                            role="option"
-                            aria-selected={item.id === activeId}
-                            aria-current={item.id === activeId ? "true" : undefined}
-                            onClick={() => void select(item)}
-                            style={{minHeight: rowHeights.headlines}}
-                            className={cn(
-                                "flex w-full gap-2 border-b px-3 py-2 text-left hover:bg-accent",
-                                item.id === activeId && "bg-accent",
-                                item.status === 'READ' ? "text-muted-foreground" : "font-medium"
-                            )}
-                        >
-                            <FeedIcon
-                                src={feedById.get(item.rssUuid)?.icon}
-                                name={item.feedName ?? feedById.get(item.rssUuid)?.name}
-                                className="mt-0.5"
-                            />
-                            <span className="min-w-0 grow">
-                                <span className="line-clamp-2">{item.title}</span>
-                                <span className="mt-1 block text-xs text-muted-foreground">
-                                    {item.feedName ?? t("reader.unknownFeed")} · {formatDate(item.pubDate)}
-                                </span>
-                            </span>
-                        </button>
-                    ))}
-                </div>
-            </aside>
-
-            {showContent && (
-                <div
-                    onPointerDown={onHeadlinesResize}
-                    role="separator"
-                    aria-orientation="vertical"
-                    className="w-1 shrink-0 cursor-col-resize bg-border hover:bg-primary/40"
-                />
-            )}
-
-            {showContent && (
-                <main className="grow overflow-y-auto p-4" style={{fontSize: `${fontScales.content}%`}}>
-                    <RssContent
-                        rssId={activeId}
-                        item={selected}
-                        fullText={fullText}
-                        fullTextLoading={fullTextLoading}
-                        fullTextError={fullTextError}
-                        onFullText={loadFullText}
-                        onMarkRead={markRead}
-                        onMarkUnread={markUnread}
-                        onDelete={deleteItem}
-                    />
-                </main>
+            ) : (
+                <>
+                    {headlinesPane}
+                    {headlinesSeparator}
+                    {contentPane}
+                </>
             )}
 
             <Dialog open={shortcutsOpen} onOpenChange={setShortcutsOpen}>

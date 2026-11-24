@@ -80,5 +80,8 @@ public class UserSettingsPayload {
 
     @Builder.Default
     private Integer headlines = 72;
+
+    @Builder.Default
+    private Integer content = 320;
   }
 }

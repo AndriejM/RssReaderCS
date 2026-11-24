@@ -23,7 +23,7 @@ const { appConfig, settings } = vi.hoisted(() => ({
     firstFeedDone: true,
     fontScales: { feeds: 100, headlines: 100, content: 100 },
     columnWidths: { feeds: 220, headlines: 420 },
-    rowHeights: { headlines: 72 },
+    rowHeights: { headlines: 72, content: 320 },
   },
 }));
 

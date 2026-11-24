@@ -1,4 +1,4 @@
-import {Columns2, Columns3, List} from "lucide-react";
+import {Columns2, Columns3, PanelLeft} from "lucide-react";
 import {Button} from "@/shared/ui/kit/button.tsx";
 import {Tooltip, TooltipContent, TooltipTrigger} from "@/shared/ui/kit/tooltip.tsx";
 import {useSettingsStore, useSettingsStoreAsync} from "@/shared/storage/settings-store.ts";
@@ -7,7 +7,7 @@ import {LAYOUTS, resolveLayout, type Layout} from "@/shared/model/layout.ts";
 
 const LAYOUT_ICONS = {
     three: Columns3,
-    list: List,
+    outlook: PanelLeft,
     split: Columns2,
 } as const;
 
