@@ -121,6 +121,14 @@ public class RssLoaderService {
     rssItemRepository.deleteByUserIdAndStatusAndPubDate(userId, expiredDate);
   }
 
+  public void deleteFeedItemsBefore(Long userId, String rssUuid, LocalDateTime expiredDate) {
+    rssItemRepository.deleteByUserIdAndRssUuidAndPubDateBefore(userId, rssUuid, expiredDate);
+  }
+
+  public void deleteAllItemsBefore(Long userId, LocalDateTime expiredDate) {
+    rssItemRepository.deleteAllByUserIdAndPubDateBefore(userId, expiredDate);
+  }
+
   private FetchResponse fetch(RssConfig rss) throws Exception {
     HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create(rss.getUrl()))
         .timeout(REQUEST_TIMEOUT)

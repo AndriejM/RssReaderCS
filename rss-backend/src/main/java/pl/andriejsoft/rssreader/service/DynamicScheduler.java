@@ -18,7 +18,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.View;
 import pl.andriejsoft.rssreader.dto.UserConfigDto;
 import pl.andriejsoft.rssreader.entity.AppConfigEntity;
+import pl.andriejsoft.rssreader.entity.model.Group;
 import pl.andriejsoft.rssreader.entity.model.JobParams;
+import pl.andriejsoft.rssreader.entity.model.RssConfig;
+import pl.andriejsoft.rssreader.entity.model.UserConfigPayload;
 import pl.andriejsoft.rssreader.entity.model.UserSettingsPayload;
 import pl.andriejsoft.rssreader.utils.LogHelper;
 
@@ -61,18 +64,46 @@ public class DynamicScheduler {
     log.info("Starting cleaning ...");
     feedLockService.cleanup();
     AppConfigEntity appConfig = appConfigService.getAppConfig();
-    UserConfigDto currentUserConfig = userConfigService.getCurrentUserConfig();
 
-    cleanOldRssRecords(currentUserConfig.getId(),
+    for (UserConfigDto userConfig : userConfigService.findConfigAll()) {
+      cleanUser(userConfig, appConfig);
+    }
+  }
+
+  private void cleanUser(UserConfigDto userConfig, AppConfigEntity appConfig) {
+    Long userId = userConfig.getId();
+
+    cleanOldRssRecords(userId,
         appConfig.getAppConfigPayload().getDaysForSetRead(),
         appConfig.getAppConfigPayload().getDaysForCleanRssItems());
 
-    int readTtlDays = Optional.ofNullable(currentUserConfig.getUserConfigPayload())
+    cleanFeedsByMinutes(userId, userConfig);
+
+    int readTtlDays = Optional.ofNullable(userConfig.getUserConfigPayload())
         .map(payload -> payload.getSettings())
         .map(UserSettingsPayload::getReadTtlDays)
         .orElse(appConfig.getAppConfigPayload().getDaysForSetRead());
-    readMarkerService.purgeExpired(currentUserConfig.getId(), readTtlDays);
-    readMarkerService.trim(currentUserConfig.getId());
+    readMarkerService.purgeExpired(userId, readTtlDays);
+    readMarkerService.trim(userId);
+  }
+
+  private void cleanFeedsByMinutes(Long userId, UserConfigDto userConfig) {
+    UserConfigPayload payload = userConfig.getUserConfigPayload();
+    if (payload == null || payload.getGroups() == null) {
+      return;
+    }
+    LocalDateTime now = LocalDateTime.now();
+    for (Group group : payload.getGroups()) {
+      if (group.getRssConfigs() == null) {
+        continue;
+      }
+      for (RssConfig rss : group.getRssConfigs()) {
+        if (rss.getCleanMinutes() != null && rss.getCleanMinutes() > 0) {
+          rssLoaderService.deleteFeedItemsBefore(userId, rss.getUuid(),
+              now.minusMinutes(rss.getCleanMinutes()));
+        }
+      }
+    }
   }
 
   public void cleanOldRssRecords(Long currentUserId, Integer daysForSetRead, Integer daysForClean) {

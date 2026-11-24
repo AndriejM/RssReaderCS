@@ -64,7 +64,7 @@ class DynamicSchedulerTest {
   @Test
   void startCleaningPurgesAndTrimsMarkers() {
     when(appConfigService.getAppConfig()).thenReturn(appConfig(3, 4));
-    when(userConfigService.getCurrentUserConfig()).thenReturn(userConfig(settings(10)));
+    when(userConfigService.findConfigAll()).thenReturn(List.of(userConfig(settings(10))));
 
     service.startCleaning();
 
@@ -76,9 +76,48 @@ class DynamicSchedulerTest {
   }
 
   @Test
+  void startCleaningCleansEveryUser() {
+    when(appConfigService.getAppConfig()).thenReturn(appConfig(3, 4));
+    when(userConfigService.findConfigAll()).thenReturn(List.of(userConfig(settings(10)), userConfig(2L, null)));
+
+    service.startCleaning();
+
+    verify(rssLoaderService).setReadStatusForExpiredItems(eq(USER_ID), any(LocalDateTime.class));
+    verify(rssLoaderService).setReadStatusForExpiredItems(eq(2L), any(LocalDateTime.class));
+    verify(readMarkerService).purgeExpired(USER_ID, 10);
+    verify(readMarkerService).purgeExpired(2L, 3);
+    verify(readMarkerService).trim(2L);
+  }
+
+  @Test
+  void startCleaningAppliesPerFeedCleanMinutes() {
+    RssConfig feed = rss("rss-1", null, null);
+    feed.setCleanMinutes(120);
+    when(appConfigService.getAppConfig()).thenReturn(appConfig(3, 4));
+    when(userConfigService.findConfigAll()).thenReturn(List.of(userConfigWithFeeds(settings(10), feed)));
+
+    LocalDateTime before = LocalDateTime.now().minusMinutes(1);
+    service.startCleaning();
+
+    ArgumentCaptor<LocalDateTime> cutoff = ArgumentCaptor.forClass(LocalDateTime.class);
+    verify(rssLoaderService).deleteFeedItemsBefore(eq(USER_ID), eq("rss-1"), cutoff.capture());
+    assertThat(cutoff.getValue()).isBetween(before.minusMinutes(120), LocalDateTime.now().minusMinutes(120).plusMinutes(2));
+  }
+
+  @Test
+  void startCleaningSkipsPerFeedCleanupWithoutCleanMinutes() {
+    when(appConfigService.getAppConfig()).thenReturn(appConfig(3, 4));
+    when(userConfigService.findConfigAll()).thenReturn(List.of(userConfigWithFeeds(settings(10), rss("rss-1", null, null))));
+
+    service.startCleaning();
+
+    verify(rssLoaderService, never()).deleteFeedItemsBefore(any(), any(), any());
+  }
+
+  @Test
   void startCleaningFallsBackToAppConfigTtlWhenSettingsAreMissing() {
     when(appConfigService.getAppConfig()).thenReturn(appConfig(3, 4));
-    when(userConfigService.getCurrentUserConfig()).thenReturn(userConfig(null));
+    when(userConfigService.findConfigAll()).thenReturn(List.of(userConfig(null)));
 
     service.startCleaning();
 
@@ -88,7 +127,7 @@ class DynamicSchedulerTest {
   @Test
   void startCleaningWrapsLoaderFailure() {
     when(appConfigService.getAppConfig()).thenReturn(appConfig(3, 4));
-    when(userConfigService.getCurrentUserConfig()).thenReturn(userConfig(settings(10)));
+    when(userConfigService.findConfigAll()).thenReturn(List.of(userConfig(settings(10))));
     doThrow(new IllegalStateException("db down")).when(rssLoaderService)
         .setReadStatusForExpiredItems(any(), any());
 
@@ -267,9 +306,28 @@ class DynamicSchedulerTest {
   }
 
   private UserConfigDto userConfig(UserSettingsPayload settings) {
+    return userConfig(USER_ID, settings);
+  }
+
+  private UserConfigDto userConfig(Long id, UserSettingsPayload settings) {
+    return UserConfigDto.builder()
+        .id(id)
+        .userConfigPayload(UserConfigPayload.builder().settings(settings).build())
+        .build();
+  }
+
+  private UserConfigDto userConfigWithFeeds(UserSettingsPayload settings, RssConfig... feeds) {
+    Group group = Group.builder()
+        .uuid("group-1")
+        .name("DEFAULT")
+        .rssConfigs(new ArrayList<>(List.of(feeds)))
+        .build();
     return UserConfigDto.builder()
         .id(USER_ID)
-        .userConfigPayload(UserConfigPayload.builder().settings(settings).build())
+        .userConfigPayload(UserConfigPayload.builder()
+            .settings(settings)
+            .groups(new ArrayList<>(List.of(group)))
+            .build())
         .build();
   }
 

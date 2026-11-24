@@ -42,4 +42,14 @@ public interface RssItemRepository extends CrudRepository<RssItem, Long> {
   @Transactional
   @Query("delete RssItem u where u.userId = ?1 and u.status = 'READ' and u.pubDate < ?2")
   void deleteByUserIdAndStatusAndPubDate(Long userId, LocalDateTime pubDate);
+
+  @Modifying
+  @Transactional
+  @Query("delete RssItem u where u.userId = ?1 and u.rssUuid = ?2 and u.pubDate < ?3")
+  void deleteByUserIdAndRssUuidAndPubDateBefore(Long userId, String rssUuid, LocalDateTime pubDate);
+
+  @Modifying
+  @Transactional
+  @Query("delete RssItem u where u.userId = ?1 and u.pubDate < ?2")
+  void deleteAllByUserIdAndPubDateBefore(Long userId, LocalDateTime pubDate);
 }
