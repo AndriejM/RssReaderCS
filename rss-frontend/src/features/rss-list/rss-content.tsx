@@ -2,7 +2,9 @@ import {useEffect, useMemo, Suspense} from "react";
 import {ErrorBoundary} from 'react-error-boundary';
 import parse from "html-react-parser";
 import DOMPurify from "dompurify";
+import {CheckCheck, CircleDot, FileText, Trash2} from "lucide-react";
 import {Button} from "@/shared/ui/kit/button.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/shared/ui/kit/tooltip.tsx";
 import {useRssContentStore, useRssContentStoreAsync} from "@/shared/storage/rss-content-store.ts";
 import {useI18n} from "@/shared/i18n/use-i18n.ts";
 import type {RssFullText, RssItem} from "@/shared/model/types.ts";
@@ -29,6 +31,7 @@ export function RssContent(props: RssContentProps) {
     }, [props.rssId, updateRssId]);
 
     const display = rss ?? props.item;
+    const isRead = display?.status === 'READ';
 
     const description = useMemo(
         () => parse(DOMPurify.sanitize(display?.itemPayload?.description || display?.description || "")),
@@ -46,23 +49,45 @@ export function RssContent(props: RssContentProps) {
                     <div className="space-y-4">
                         <div className="flex flex-wrap gap-2">
                             {display && (
-                                <Button size="sm" variant="outline" onClick={() => props.onFullText(display)}>
-                                    {t("reader.fullText")}
-                                </Button>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon-sm" variant="outline" aria-label={t("reader.fullText")} onClick={() => props.onFullText(display)}>
+                                            <FileText/>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{t("reader.fullText")}</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             )}
                             {display && (
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => display.status === 'READ' ? props.onMarkUnread(display) : props.onMarkRead(display)}
-                                >
-                                    {display.status === 'READ' ? t("reader.markUnread") : t("reader.markRead")}
-                                </Button>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            size="icon-sm"
+                                            variant="outline"
+                                            aria-label={isRead ? t("reader.markUnread") : t("reader.markRead")}
+                                            onClick={() => isRead ? props.onMarkUnread(display) : props.onMarkRead(display)}
+                                        >
+                                            {isRead ? <CircleDot/> : <CheckCheck/>}
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{isRead ? t("reader.markUnread") : t("reader.markRead")}</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             )}
                             {display && (
-                                <Button size="sm" variant="destructive" onClick={() => props.onDelete(display)}>
-                                    {t("common.delete")}
-                                </Button>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button size="icon-sm" variant="destructive" aria-label={t("common.delete")} onClick={() => props.onDelete(display)}>
+                                            <Trash2/>
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>{t("common.delete")}</p>
+                                    </TooltipContent>
+                                </Tooltip>
                             )}
                         </div>
                         <div>

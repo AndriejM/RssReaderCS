@@ -13,6 +13,7 @@ import {
 } from "@/shared/ui/kit/select.tsx";
 import {useAppConfigStoreAsync} from "@/shared/storage/app-config-store.ts";
 import {useSettingsStore, useSettingsStoreAsync} from "@/shared/storage/settings-store.ts";
+import {useTheme, type Theme} from "@/shared/ui/components/theme/theme-context.ts";
 import {useI18n} from "@/shared/i18n/use-i18n.ts";
 import {LANGUAGES, setLanguage, type Language} from "@/shared/i18n/i18n.ts";
 import type {UserSettingsPayload} from "@/shared/model/types.ts";
@@ -33,6 +34,7 @@ export function UserSettings() {
   const settings = useSettingsStoreAsync((state) => state.getUserSettings);
   const updateUserId = useSettingsStore((state) => state.updateUserId);
   const saveSettings = useSettingsStore((state) => state.saveUserSettings.trigger);
+  const {theme, setTheme} = useTheme();
   const {t} = useI18n();
 
   const [draft, setDraft] = useState<UserSettingsPayload | null>(settings);
@@ -106,13 +108,13 @@ export function UserSettings() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>{t("settings.theme")}</Label>
-                <Select value={draft.theme} onValueChange={(value) => patch({theme: value})}>
+                <Select value={theme} onValueChange={(value) => setTheme(value as Theme)}>
                   <SelectTrigger>
                     <SelectValue/>
                   </SelectTrigger>
                   <SelectContent>
-                    {THEMES.map((theme) => (
-                        <SelectItem key={theme} value={theme}>{t(`theme.${theme}`)}</SelectItem>
+                    {THEMES.map((themeOption) => (
+                        <SelectItem key={themeOption} value={themeOption}>{t(`theme.${themeOption}`)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

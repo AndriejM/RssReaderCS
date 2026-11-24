@@ -7,6 +7,8 @@ import {useSettingsStore, useSettingsStoreAsync} from "@/shared/storage/settings
 import {userConfigStoreAsync} from "@/shared/storage/user-config-store.ts";
 import {Button} from "@/shared/ui/kit/button.tsx";
 import {Input} from "@/shared/ui/kit/input.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/shared/ui/kit/tooltip.tsx";
+import {RefreshCw} from "lucide-react";
 import {
     Dialog,
     DialogContent,
@@ -523,9 +525,22 @@ function RssListPage() {
                         onChange={(event) => setSearch(event.target.value)}
                         placeholder={t("reader.search")}
                     />
-                    <Button size="sm" onClick={() => void refreshAll()} disabled={refreshingAll}>
-                        {refreshingAll ? t("reader.refreshing") : t("reader.refresh")}
-                    </Button>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button
+                                size="icon-sm"
+                                variant="outline"
+                                aria-label={refreshingAll ? t("reader.refreshing") : t("reader.refresh")}
+                                onClick={() => void refreshAll()}
+                                disabled={refreshingAll}
+                            >
+                                <RefreshCw className={cn(refreshingAll && "animate-spin")}/>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{refreshingAll ? t("reader.refreshing") : t("reader.refresh")}</p>
+                        </TooltipContent>
+                    </Tooltip>
                     <Button size="sm" variant="outline" onClick={() => setShortcutsOpen(true)} aria-label={t("reader.shortcuts")}>
                         ?
                     </Button>

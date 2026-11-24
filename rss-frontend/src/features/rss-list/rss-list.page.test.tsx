@@ -17,7 +17,6 @@ const { toastMock, currentSettings, saveUserSettingsInner } = vi.hoisted(() => (
     warning: vi.fn(),
   }),
   currentSettings: {
-    theme: "system",
     language: "en",
     layout: "three",
     readTtlDays: 7,

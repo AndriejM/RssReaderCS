@@ -12,9 +12,6 @@ import lombok.NoArgsConstructor;
 public class UserSettingsPayload {
 
   @Builder.Default
-  private String theme = "light";
-
-  @Builder.Default
   private String language = "ru";
 
   @Builder.Default

@@ -28,7 +28,6 @@ export interface UserConfigPayload {
 }
 
 export interface UserSettingsPayload {
-  theme: string
   language: string
   layout: string
   readTtlDays: number
