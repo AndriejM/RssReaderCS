@@ -265,11 +265,12 @@
 
 ### 8.1 Функциональные доделки
 
-- [ ] Per-feed cleanup по `cleanMinutes`: сейчас очистка идёт глобально по TTL и только для current user.
-- [ ] Scheduler/cleanup для всех пользователей, если нужен полноценный multi-user режим.
-- [ ] Multi-tab sync для `layout`, `font`, `columnWidths`, `rowHeights`; сейчас синхронизируются только theme/language.
-- [ ] Применить и дать редактировать `rowHeights` в reader UI.
-- [ ] Решить с `sound`, `soundFile`, `soundVolume`, `showMessage`: либо добавить UI в web settings, либо убрать из web-типов, если это зона `rss-chrome`.
+- [x] Per-feed cleanup по `cleanMinutes`: очистка идёт по `cleanMinutes` каждого фида и для всех пользователей.
+- [x] Scheduler/cleanup для всех пользователей, если нужен полноценный multi-user режим.
+- [x] Multi-tab sync для `layout`, `font`, `columnWidths`, `rowHeights` (BroadcastChannel + storage fallback).
+- [x] Применить и дать редактировать `rowHeights` в reader UI.
+- [x] Решить с `sound`, `soundFile`, `soundVolume`, `showMessage`: убраны из web-типов, это зона `rss-chrome`.
+- [x] Возврат из настроек к той же фид/headline (selection persist в localStorage).
 
 ### 8.2 Проверки, которые уже проходят
 
@@ -301,8 +302,8 @@ Backend и frontend автотесты написаны и проходят (202
 
 #### Chrome module
 
-- [ ] Unit tests для `rss-chrome`: нормализация настроек, badge text, нотификация только при увеличении unread, focus/create tab.
-- [ ] Использовать `node --test` с моками `chrome.*` или отдельный лёгкий test runner.
+- [x] Unit tests для `rss-chrome`: нормализация настроек, badge text, нотификация только при увеличении unread, focus/create tab.
+- [x] Использовать `node --test` с моками `chrome.*` или отдельный лёгкий test runner.
 
 #### Команды для проверки
 

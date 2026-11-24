@@ -129,6 +129,7 @@ function renderPage() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  localStorage.clear();
 
   useRssListAllStore.setState({ userId: 1 });
   useRssListAllStore.getState().getRssList.setValue(items);
@@ -245,6 +246,28 @@ describe("reader page", () => {
 
     expect(await screen.findByText("Beta story")).toBeInTheDocument();
     expect(screen.getByText("Gamma old")).toBeInTheDocument();
+  });
+
+  it("restores the selected feed and headline after remount", async () => {
+    const first = render(
+      <Suspense fallback={<div>loading-page</div>}>
+        <RssListPage />
+      </Suspense>,
+    );
+
+    fireEvent.click(await screen.findByText("Feed One"));
+    await waitFor(() =>
+      expect(screen.getByText("Alpha news").closest('[role="option"]')).toHaveAttribute("aria-selected", "true"),
+    );
+
+    first.unmount();
+    renderPage();
+
+    expect(await screen.findByText("Alpha news")).toBeInTheDocument();
+    expect(screen.queryByText("Beta story")).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText("Alpha news").closest('[role="option"]')).toHaveAttribute("aria-selected", "true"),
+    );
   });
 
   it("switches layout and hides panels accordingly", async () => {

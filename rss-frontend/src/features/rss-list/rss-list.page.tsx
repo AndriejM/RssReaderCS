@@ -71,6 +71,29 @@ function matchesSearch(item: RssItem, query: string) {
     return query.split(/\s+/).filter(Boolean).every((word) => haystack.includes(word));
 }
 
+function selectionKey(userId: number) {
+    return `rss-reader:selection:${userId}`;
+}
+
+function readSelection(userId: number | null): {feed: string; rssId: number | null} | null {
+    if (userId === null) {
+        return null;
+    }
+    try {
+        const raw = localStorage.getItem(selectionKey(userId));
+        if (!raw) {
+            return null;
+        }
+        const parsed = JSON.parse(raw) as {feed?: unknown; rssId?: unknown};
+        return {
+            feed: typeof parsed.feed === "string" ? parsed.feed : ALL_FEEDS,
+            rssId: typeof parsed.rssId === "number" ? parsed.rssId : null,
+        };
+    } catch {
+        return null;
+    }
+}
+
 function RssListPage() {
     const rssList = useRssListAllStoreAsync((state) => state.getRssList);
     const appConfig = useAppConfigStoreAsync((state) => state.appConfig);
@@ -100,6 +123,21 @@ function RssListPage() {
             updateUserId(appConfig.appConfigPayload.defaultUserId);
         }
     }, [appConfig, updateUserId]);
+
+    const restoredFor = useRef<number | null>(null);
+    useEffect(() => {
+        if (userId === null || restoredFor.current === userId) {
+            return;
+        }
+        queueMicrotask(() => {
+            const saved = readSelection(userId);
+            if (saved) {
+                setSelectedFeed(saved.feed);
+                setRssId(saved.rssId);
+            }
+            restoredFor.current = userId;
+        });
+    }, [userId]);
 
     const layout: Layout = (LAYOUTS as readonly string[]).includes(settings?.layout ?? "")
         ? (settings!.layout as Layout)
@@ -165,6 +203,17 @@ function RssListPage() {
         }
         return filtered[0]?.id ?? null;
     }, [filtered, rssId]);
+
+    useEffect(() => {
+        if (userId === null || restoredFor.current !== userId) {
+            return;
+        }
+        try {
+            localStorage.setItem(selectionKey(userId), JSON.stringify({feed: selectedFeed, rssId: activeId}));
+        } catch {
+            // selection restore is best effort
+        }
+    }, [userId, selectedFeed, activeId]);
 
     const selected = useMemo(
         () => rssList.find((item) => item.id === activeId) ?? null,
