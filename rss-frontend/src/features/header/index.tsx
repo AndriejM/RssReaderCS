@@ -1,13 +1,17 @@
 import {ModeToggle} from "@/shared/ui/components/theme/mode-toggle.tsx";
 import {UserSelector} from "@/features/header/user-selector.tsx";
 import {UserCreator} from "@/features/header/user-creator.tsx";
+import {LayoutSwitcher} from "@/shared/ui/components/layout/layout-switcher.tsx";
 import {Button} from "@/shared/ui/kit/button.tsx";
 import {Rss, SettingsIcon} from "lucide-react";
-import {Link} from "react-router-dom";
+import {Link, useLocation} from "react-router-dom";
+import {ROUTES} from "@/shared/model/routes.ts";
 import {useI18n} from "@/shared/i18n/use-i18n.ts";
 
 export function AppHeader() {
   const {t} = useI18n();
+  const location = useLocation();
+  const isReader = location.pathname === ROUTES.RSS_LIST;
 
   return (
       <>
@@ -23,6 +27,7 @@ export function AppHeader() {
                 <SettingsIcon />
               </Button>
             </Link>
+            {isReader && <LayoutSwitcher />}
           </div>
           <div className="col-span-2">
             <div className="flex p-2 justify-end gap-3">

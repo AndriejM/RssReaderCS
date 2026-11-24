@@ -14,6 +14,7 @@ import {
     DialogTitle,
 } from "@/shared/ui/kit/dialog.tsx";
 import {RssContent} from "@/features/rss-list/rss-content.tsx";
+import {resolveLayout} from "@/shared/model/layout.ts";
 import {cn} from "@/shared/lib/css";
 import {useDragWidth} from "@/shared/lib/use-column-resize.ts";
 import {useUnreadBadge} from "@/shared/lib/use-unread-badge.ts";
@@ -30,8 +31,6 @@ import {useI18n} from "@/shared/i18n/use-i18n.ts";
 import type {RssFullText, RssItem} from "@/shared/model/types.ts";
 
 const ALL_FEEDS = "__all__";
-const LAYOUTS = ["three", "list", "split"] as const;
-type Layout = (typeof LAYOUTS)[number];
 
 const SHORTCUTS: {keys: string; label: string}[] = [
     {keys: "/", label: "Focus search"},
@@ -139,9 +138,7 @@ function RssListPage() {
         });
     }, [userId]);
 
-    const layout: Layout = (LAYOUTS as readonly string[]).includes(settings?.layout ?? "")
-        ? (settings!.layout as Layout)
-        : "three";
+    const layout = resolveLayout(settings?.layout);
     const fontScales = settings?.fontScales ?? {feeds: 100, headlines: 100, content: 100};
     const columnWidths = settings?.columnWidths ?? {feeds: 220, headlines: 420};
     const rowHeights = settings?.rowHeights ?? {headlines: 72};
@@ -377,13 +374,6 @@ function RssListPage() {
         }
     }, [invalidate, refreshUnread, userId, t]);
 
-    const changeLayout = useCallback((next: Layout) => {
-        if (!settings) {
-            return;
-        }
-        void saveSettings({...settings, layout: next});
-    }, [saveSettings, settings]);
-
     useEffect(() => {
         const handler = (event: KeyboardEvent) => {
             const target = event.target as HTMLElement | null;
@@ -541,16 +531,6 @@ function RssListPage() {
                     </Button>
                 </div>
                 <div className="flex items-center gap-1 border-b px-2 py-1">
-                    {LAYOUTS.map((option) => (
-                        <Button
-                            key={option}
-                            size="sm"
-                            variant={layout === option ? "secondary" : "ghost"}
-                            onClick={() => changeLayout(option)}
-                        >
-                            {option}
-                        </Button>
-                    ))}
                     <span className="ml-auto text-xs text-muted-foreground" aria-live="polite">
                         {filtered.length} {t("reader.shown")} / {totalUnread} {t("reader.unread")}
                     </span>

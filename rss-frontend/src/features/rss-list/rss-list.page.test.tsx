@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Component as RssListPage } from "@/features/rss-list/rss-list.page.tsx";
+import { LayoutSwitcher } from "@/shared/ui/components/layout/layout-switcher.tsx";
 import * as api from "@/shared/api/api.ts";
 import { useAppConfigStore } from "@/shared/storage/app-config-store.ts";
 import { useRssListAllStore } from "@/shared/storage/rss-list-all-store.ts";
@@ -122,6 +123,7 @@ const userConfig: UserConfig = {
 function renderPage() {
   render(
     <Suspense fallback={<div>loading-page</div>}>
+      <LayoutSwitcher />
       <RssListPage />
     </Suspense>,
   );
@@ -275,7 +277,7 @@ describe("reader page", () => {
     await screen.findByText("Beta story");
 
     currentSettings.layout = "list";
-    fireEvent.click(screen.getByRole("button", { name: "list" }));
+    fireEvent.click(screen.getByRole("button", { name: "List" }));
 
     await waitFor(() => expect(saveUserSettingsInner).toHaveBeenCalled());
     expect(await screen.findByTestId("reader-root")).toHaveAttribute("data-layout", "list");
@@ -284,7 +286,7 @@ describe("reader page", () => {
 
     currentSettings.layout = "split";
     await new Promise((r) => setTimeout(r, 700));
-    fireEvent.click(screen.getByRole("button", { name: "split" }));
+    fireEvent.click(screen.getByRole("button", { name: "Split" }));
     await waitFor(() => expect(saveUserSettingsInner).toHaveBeenCalledTimes(2));
 
     expect(await screen.findByTestId("reader-root")).toHaveAttribute("data-layout", "split");
