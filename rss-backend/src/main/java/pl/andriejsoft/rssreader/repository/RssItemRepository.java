@@ -52,4 +52,9 @@ public interface RssItemRepository extends CrudRepository<RssItem, Long> {
   @Transactional
   @Query("delete RssItem u where u.userId = ?1 and u.pubDate < ?2")
   void deleteAllByUserIdAndPubDateBefore(Long userId, LocalDateTime pubDate);
+
+  @Modifying
+  @Transactional
+  @Query("delete RssItem u where u.userId = ?1")
+  void deleteAllByUserId(Long userId);
 }

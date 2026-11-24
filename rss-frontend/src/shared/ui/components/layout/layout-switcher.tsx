@@ -1,5 +1,6 @@
 import {Columns2, Columns3, List} from "lucide-react";
 import {Button} from "@/shared/ui/kit/button.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/shared/ui/kit/tooltip.tsx";
 import {useSettingsStore, useSettingsStoreAsync} from "@/shared/storage/settings-store.ts";
 import {useI18n} from "@/shared/i18n/use-i18n.ts";
 import {LAYOUTS, resolveLayout, type Layout} from "@/shared/model/layout.ts";
@@ -29,16 +30,22 @@ export function LayoutSwitcher() {
             {LAYOUTS.map((option) => {
                 const Icon = LAYOUT_ICONS[option];
                 return (
-                    <Button
-                        key={option}
-                        size="icon-sm"
-                        variant={layout === option ? "secondary" : "outline"}
-                        aria-label={t(`layout.${option}`)}
-                        aria-pressed={layout === option}
-                        onClick={() => changeLayout(option)}
-                    >
-                        <Icon/>
-                    </Button>
+                    <Tooltip key={option}>
+                        <TooltipTrigger asChild>
+                            <Button
+                                size="icon-sm"
+                                variant={layout === option ? "secondary" : "outline"}
+                                aria-label={t(`layout.${option}`)}
+                                aria-pressed={layout === option}
+                                onClick={() => changeLayout(option)}
+                            >
+                                <Icon/>
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{t(`layout.${option}`)}</p>
+                        </TooltipContent>
+                    </Tooltip>
                 );
             })}
         </div>

@@ -1,8 +1,8 @@
 import {ModeToggle} from "@/shared/ui/components/theme/mode-toggle.tsx";
 import {UserSelector} from "@/features/header/user-selector.tsx";
-import {UserCreator} from "@/features/header/user-creator.tsx";
 import {LayoutSwitcher} from "@/shared/ui/components/layout/layout-switcher.tsx";
 import {Button} from "@/shared/ui/kit/button.tsx";
+import {Tooltip, TooltipContent, TooltipTrigger} from "@/shared/ui/kit/tooltip.tsx";
 import {Rss, SettingsIcon} from "lucide-react";
 import {Link, useLocation} from "react-router-dom";
 import {ROUTES} from "@/shared/model/routes.ts";
@@ -15,26 +15,37 @@ export function AppHeader() {
 
   return (
       <>
-        <div className="grid grid-cols-8 gap-4">
+        <div className="flex items-center justify-between">
           <div className="flex p-2 justify-start gap-3">
             <Link to="/">
-              <Button variant="outline" size="icon" aria-label={t("nav.reader")}>
-                <Rss />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label={t("nav.reader")}>
+                    <Rss />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t("nav.reader")}</p>
+                </TooltipContent>
+              </Tooltip>
             </Link>
             <Link to="/settings">
-              <Button variant="outline" size="icon" aria-label={t("settings.title")}>
-                <SettingsIcon />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" aria-label={t("settings.title")}>
+                    <SettingsIcon />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{t("settings.title")}</p>
+                </TooltipContent>
+              </Tooltip>
             </Link>
             {isReader && <LayoutSwitcher />}
           </div>
-          <div className="col-span-2">
-            <div className="flex p-2 justify-end gap-3">
-              <div><UserSelector/></div>
-              <div><UserCreator/></div>
-              <div><ModeToggle/></div>
-            </div>
+          <div className="flex p-2 justify-end gap-3">
+            <div><UserSelector/></div>
+            <div><ModeToggle/></div>
           </div>
         </div>
       </>

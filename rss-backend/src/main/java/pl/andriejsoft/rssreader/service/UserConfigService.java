@@ -102,6 +102,19 @@ public class UserConfigService {
             .build()).orElse(null);
   }
 
+  @CacheEvict(value = "config", allEntries = true)
+  public UserDto updateUser(UserDto userDto) {
+    return userConfigRepository.findById(userDto.getId())
+        .map(entity -> {
+          entity.setUserName(userDto.getUserName());
+          return userConfigRepository.save(entity);
+        })
+        .map(i -> UserDto.builder()
+            .id(i.getId())
+            .userName(i.getUserName())
+            .build()).orElse(null);
+  }
+
   public Optional<RssConfig> findRssConfig(Long userId, String rssUuid) {
     return userConfigRepository.findById(userId)
         .map(UserConfigEntity::getUserConfigPayload)

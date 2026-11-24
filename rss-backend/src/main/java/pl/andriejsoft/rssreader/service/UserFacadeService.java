@@ -9,6 +9,8 @@ import pl.andriejsoft.rssreader.dto.UserConfigDto;
 import pl.andriejsoft.rssreader.entity.AppConfigEntity;
 import pl.andriejsoft.rssreader.exception.RssReaderException;
 import pl.andriejsoft.rssreader.mapper.AppConfigMapper;
+import pl.andriejsoft.rssreader.repository.ReadMarkerRepository;
+import pl.andriejsoft.rssreader.repository.RssItemRepository;
 
 @Service
 public class UserFacadeService {
@@ -25,6 +27,12 @@ public class UserFacadeService {
   @Autowired
   private AppConfigMapper appConfigMapper;
 
+  @Autowired
+  private RssItemRepository rssItemRepository;
+
+  @Autowired
+  private ReadMarkerRepository readMarkerRepository;
+
   public void saveConfig(UserConfigDto config) {
     userConfigService.saveConfig(config);
     AppConfigDto appConfig = appConfigService.getConfig();
@@ -38,6 +46,8 @@ public class UserFacadeService {
     if (appConfig.getAppConfigPayload().getDefaultUserId().equals(userId)) {
       throw new RssReaderException("You can't delete this config, this is current user!");
     } else {
+      rssItemRepository.deleteAllByUserId(userId);
+      readMarkerRepository.deleteByUserId(userId);
       userConfigService.deleteConfigById(userId);
     }
   }

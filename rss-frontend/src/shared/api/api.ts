@@ -59,6 +59,12 @@ export const getUser = () => {
 export const createUser = (user: User) => {
   return apiRequest<void, User>("/user/create", "POST", user);
 }
+export const updateUser = (user: User) => {
+  return apiRequest<void, User>("/user/update", "PUT", user);
+}
+export const deleteUser = (userId: number) => {
+  return apiRequest<void, void>(`/user-config/delete/${userId}`, "DELETE");
+}
 export const getUserConfig = () => {
   return apiRequest<UserConfig[]>("/user-config/find", "GET");
 }
@@ -69,9 +75,6 @@ export const getUserConfigById = (get: UserIdGetter) => async () => {
 }
 export const saveUserConfig = (userConfig: UserConfig) => {
   return apiRequest<void, UserConfig>("/user-config/save", "POST", userConfig);
-}
-export const deleteUserConfig = (userId: number) => {
-  return apiRequest<void, void>(`/user-config/delete/${userId}`, "DELETE");
 }
 export const getUserSettings = (userId: number) => {
   return apiRequest<UserSettingsPayload>(`/user-config/${userId}/settings`, "GET");
